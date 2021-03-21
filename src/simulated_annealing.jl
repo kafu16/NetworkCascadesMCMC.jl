@@ -47,8 +47,9 @@ end
 ################################################################################
 using Statistics
 
-function energy!(g, P, C, N_side, N_removals = 0) # calculates energy of step k, C: threshold that marks line failure,
+function energy(g, P, C, N_side, N_removals = 0) # calculates energy of step k, C: threshold that marks line failure,
 # N_side: N_squared gives number of vertices, N_removals (optional argument): number of edge removals for approximation
+    g_init = copy(g)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
     linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numberd in an array
@@ -70,8 +71,9 @@ function energy!(g, P, C, N_side, N_removals = 0) # calculates energy of step k,
         #global G[i] = ne(g)
         global G[i] = biggest_component(g) # G: size of biggest connected component, global lets the values of G saved after each run of loop,
         # otherwise G would be overwritten in each run of loop
-        g = gen_square_grid(N_side)
+        g = copy(g_init)
     end
+    global g = copy(g_init)
     G_av = mean(G)
     G, G_av # this way two values in a tuple are returned by a function
 end
@@ -135,7 +137,7 @@ N_removals = 0
 function eval_one_random_config(N_side, C)
     g = gen_square_grid(N_side)
     P = gen_stable_config(g, N_side, C)
-    energy!(g, P, C, N_side, N_removals)
+    energy(g, P, C, N_side, N_removals)
 end
 
 
@@ -156,9 +158,8 @@ function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setti
         T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
         P = stable_swapped_config!(g, P, C, N_side)
-        energy_old = energy!(g, P_old, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
-        g = gen_square_grid(N_side) # energy!() mutates g, so g has to be rebuilt every time before calculating energy!() again
-        energy_new = energy!(g, P, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
+        energy_old = energy(g, P_old, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
+        energy_new = energy(g, P, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
         ΔE = energy_new - energy_old
         #### performance: let energy() calculate G_av only
 
@@ -170,7 +171,6 @@ function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setti
         else
             P = P_old
         end
-        g = gen_square_grid(N_side)
         push!(en, energy_old)
     end
     P, en
@@ -184,10 +184,10 @@ function eval_sim_anneal!(N_side, C, T, N_removals = 0, k_max = 10)
     P_initial = copy(P)
     P, en = sim_anneal!(g, P, C, N_side, 0, k_max)
     g = gen_square_grid(N_side)
-    energy_initial = energy!(g, P_initial, C, N_side, N_removals)
+    energy_initial = energy(g, P_initial, C, N_side, N_removals)
     g = gen_square_grid(N_side)
     N_T = flows_above_thres(T, P, g)
-    energy_final = energy!(g, P, C, N_side, N_removals)
+    energy_final = energy(g, P, C, N_side, N_removals)
     P_initial, energy_initial, P, energy_final, N_T, en
 end
 
@@ -203,7 +203,8 @@ end
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
 function temperature(k)
-    1. / (1 + 0.0001 * floor(k/4))
+    0.999 ^ (floor(k/4))
+    #1. / (1 + 0.0001 * floor(k/4))
 end
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
