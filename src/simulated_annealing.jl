@@ -85,7 +85,7 @@ end
 
 ### swap of configurations
 function swap!(P, N_side) # swaps randomly chosen generator-consumer pair
-    N_vertices = N_side * N_side
+    N_vertices = length(P)
     A = rand(1:N_vertices,1)
     B = rand(1:N_vertices,1)
     # println("A initial", A) # following println-lines only to check what while-loop does, not necessary for swap()
@@ -121,9 +121,17 @@ function stable_swapped_config!(g, P, C, N_side)
     # P_stable_old would equal P all the time, even when the value of P is changed
     P = swap!(P, N_side)
     F = flow(g, P)
+    #### ToDo: include max_iterations as variable parameter?
+    max_iterations = 10000 # hardcoded number of iteration after that loop is excited
+    global i = 1
     while maximum(abs.(F)) > C
         P = swap!(P_stable_old, N_side)
         F = flow(g, P)
+        #### ToDo
+        if i >= max_iterations
+            error("ERROR: Maximum number of iterations for finding stable configuration reached.")
+        end
+        global i += 1
     end
     P
 end
@@ -144,7 +152,6 @@ end
 ################################################################################
 ############### implementation of Simulated Annealing (SA) #####################
 ################################################################################
-####
 
 ### key code of SA
 
@@ -154,6 +161,7 @@ end
 function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal!() tendentially finds a more stable configuration
     en = [ ]
+    g_init = copy(g)
     for k in 0:k_max - 1
         T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
@@ -161,7 +169,8 @@ function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setti
         energy_old = energy(g, P_old, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
         energy_new = energy(g, P, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
         ΔE = energy_new - energy_old
-        #### performance: let energy() calculate G_av only
+        #### performance: let energy() calculate G_av only? Nope, G is only saving
+        # to an array and is helpful for understanding the algorithm.
 
         if ΔE <= 0 # man könnte conditional auch umdrehen: if (ΔE <= 0 AND probability(ΔE, T) < rand())
                                                                  # P = P_old
@@ -171,6 +180,7 @@ function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setti
         else
             P = P_old
         end
+        g = copy(g_init)
         push!(en, energy_old)
     end
     P, en
@@ -203,7 +213,8 @@ end
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
 function temperature(k)
-    0.999 ^ (floor(k/4))
+    0.99 ^ k
+    #0.999 ^ (floor(k/4))
     #1. / (1 + 0.0001 * floor(k/4))
 end
 
@@ -242,4 +253,8 @@ end
 
 function temp_ex4(k)
     0.9999 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+end
+
+function temp_ex5(k)
+    0.99 ^ k # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
