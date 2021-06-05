@@ -160,8 +160,8 @@ end
 # core function for simulated annealing
 function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal!() tendentially finds a more stable configuration
+
     en = [ ]
-    g_init = copy(g)
     for k in 0:k_max - 1
         T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
@@ -180,7 +180,6 @@ function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setti
         else
             P = P_old
         end
-        g = copy(g_init)
         push!(en, energy_old)
     end
     P, en
