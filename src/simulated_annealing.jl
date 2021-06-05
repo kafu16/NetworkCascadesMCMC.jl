@@ -47,9 +47,9 @@ end
 ################################################################################
 using Statistics
 
-function energy(g, P, C, N_side, N_removals = 0) # calculates energy of step k, C: threshold that marks line failure,
+function energy(g_init, P, C, N_side, N_removals = 0) # calculates energy of step k, C: threshold that marks line failure,
 # N_side: N_squared gives number of vertices, N_removals (optional argument): number of edge removals for approximation
-    g_init = copy(g)
+    g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
     linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numberd in an array
@@ -73,7 +73,7 @@ function energy(g, P, C, N_side, N_removals = 0) # calculates energy of step k, 
         # otherwise G would be overwritten in each run of loop
         g = copy(g_init)
     end
-    global g = copy(g_init)
+
     G_av = mean(G)
     G, G_av # this way two values in a tuple are returned by a function
 end
