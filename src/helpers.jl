@@ -14,8 +14,8 @@ function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_sched
             Temp = annealing_schedule(k)
             P_old = copy(P) # for calculating the energy of "old" configuration
             P = stable_swapped_config!(g, P, C, N_side)
-            energy_old = energy(g, P_old, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
-            energy_new = energy(g, P, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
+            energy_old = energy(g, P_old, C, N_side)[2] # by [2] only the second value of tuple is returned (G_av)
+            energy_new = energy(g, P, C, N_side)[2] # by [2] only the second value of tuple is returned (G_av)
             ΔE = energy_new - energy_old
             #### performance: let energy() calculate G_av only
 
@@ -30,16 +30,35 @@ function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_sched
             g = gen_square_grid(N_side)
             push!(en, energy_old)
         end
-        energy_initial = energy(g, P_initial, C, N_side, N_removals)
+        energy_initial = energy(g, P_initial, C, N_side)
         N_T = flows_above_thres(T, P_initial, g), flows_above_thres(T, P, g)
         locality_init = loc_1step!(P_initial, C, N_side), loc_1step_0!(P_initial, C, N_side)
         locality_final = loc_1step!(P, C, N_side), loc_1step_0!(P, C, N_side)
-        energy_final = energy(g, P, C, N_side, N_removals)
+        energy_final = energy(g, P, C, N_side)
         SA_extremal = P_initial, energy_initial, nr_gen_con(P_initial, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final
         push!(Data, SA_extremal)
     end
     Data
 end
+
+
+# function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_schedule, k_max)
+#     Data = []
+#     for i in 1:N_runs
+#         g = gen_square_grid(N_side)
+#         P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
+#         P_initial = copy(P)
+#         P, en = sim_anneal!(g, P, C, N_side, 0, k_max)
+#         energy_initial = energy(g, P_initial, C, N_side)
+#         N_T = flows_above_thres(T, P_initial, g), flows_above_thres(T, P, g)
+#         locality_init = loc_1step!(P_initial, C, N_side), loc_1step_0!(P_initial, C, N_side)
+#         locality_final = loc_1step!(P, C, N_side), loc_1step_0!(P, C, N_side)
+#         energy_final = energy(g, P, C, N_side)
+#         SA_extremal = P_initial, energy_initial, nr_gen_con(P_initial, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final
+#         push!(Data, SA_extremal)
+#     end
+#     Data
+# end
 
 ### data collection: collects multiple runs of eval_sim_anneal!() in one object
 function collect_data_SA_runs(N_runs, N_side, C, T, k_max)

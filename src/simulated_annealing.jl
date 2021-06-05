@@ -47,25 +47,25 @@ end
 ################################################################################
 using Statistics
 
-function energy(g_init, P, C, N_side, N_removals = 0) # calculates energy of step k, C: threshold that marks line failure,
-# N_side: N_squared gives number of vertices, N_removals (optional argument): number of edge removals for approximation
+function energy(g_init, P, C, N_side) # calculates energy of step k, C: threshold that marks line failure,
     g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
     linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numberd in an array
     linefailure_indizes = shuffle!(linefailure_indizes) # positions of edges in linefailure_indizes is randomly permuted by shuffle!()
-    # randomness is redundant unsless m in following for-loop is replaced by a number smaller than m
+    # randomness is redundant unless m in following for-loop is replaced by a number smaller than m
 
-    if N_removals > 0
-        N = N_removals
-    else
-        N = m
-    end
+    # # N_removals (optional argument): number of edge removals for approximation
+    # # (not implemented)
+    # if N_removals > 0
+    #     N = N_removals
+    # else
+    #     N = m
+    # end
+    # # Für Näherung, d.h. man zieht nur N edges anstatt alle, muss man das nachfolgenden m durch N ersetzen
 
-    G = zeros(N)
-
-    #### ToDo Für Näherung, d.h. man zieht nur N edges anstatt alle, muss man das nachfolgende m durch N ersetzen -> herausfinden ob man das iwie mit optional arguments machen kann
-    for i in 1:N # for loop for randomly chosen N_vertices linefailures
+    G = zeros(m)
+    for i in 1:m # for loop for randomly chosen N_vertices linefailures
         g = linefailure!(g, linefailure_indizes[i])
         g = cascade!(g, P, C)
         #global G[i] = ne(g)
@@ -145,7 +145,7 @@ N_removals = 0
 function eval_one_random_config(N_side, C)
     g = gen_square_grid(N_side)
     P = gen_stable_config(g, N_side, C)
-    energy(g, P, C, N_side, N_removals)
+    energy(g, P, C, N_side)
 end
 
 
@@ -158,7 +158,7 @@ end
 #### ToDo: Option N_removals entfernen
 
 # core function for simulated annealing
-function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setting number of computation steps
+function sim_anneal!(g, P, C, N_side, k_max) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal!() tendentially finds a more stable configuration
 
     en = [ ]
@@ -166,8 +166,8 @@ function sim_anneal!(g, P, C, N_side, N_removals = 0, k_max = 10) # k_max: setti
         T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
         P = stable_swapped_config!(g, P, C, N_side)
-        energy_old = energy(g, P_old, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
-        energy_new = energy(g, P, C, N_side, N_removals)[2] # by [2] only the second value of tuple is returned (G_av)
+        energy_old = energy(g, P_old, C, N_side)[2] # by [2] only the second value of tuple is returned (G_av)
+        energy_new = energy(g, P, C, N_side)[2] # by [2] only the second value of tuple is returned (G_av)
         ΔE = energy_new - energy_old
         #### performance: let energy() calculate G_av only? Nope, G is only saving
         # to an array and is helpful for understanding the algorithm.
@@ -193,10 +193,10 @@ function eval_sim_anneal!(N_side, C, T, N_removals = 0, k_max = 10)
     P_initial = copy(P)
     P, en = sim_anneal!(g, P, C, N_side, 0, k_max)
     g = gen_square_grid(N_side)
-    energy_initial = energy(g, P_initial, C, N_side, N_removals)
+    energy_initial = energy(g, P_initial, C, N_side)
     g = gen_square_grid(N_side)
     N_T = flows_above_thres(T, P, g)
-    energy_final = energy(g, P, C, N_side, N_removals)
+    energy_final = energy(g, P, C, N_side)
     P_initial, energy_initial, P, energy_final, N_T, en
 end
 
