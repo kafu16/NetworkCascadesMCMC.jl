@@ -47,7 +47,7 @@ end
 ################################################################################
 using Statistics
 
-function energy(g_init, P, C, N_side) # calculates energy of step k, C: threshold that marks line failure,
+function energy(g_init, P, C) # calculates energy of step k, C: threshold that marks line failure,
     g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
@@ -84,7 +84,7 @@ end
 ################################################################################
 
 ### swap of configurations
-function swap!(P, N_side) # swaps randomly chosen generator-consumer pair
+function swap!(P) # swaps randomly chosen generator-consumer pair
     N_vertices = length(P)
     A = rand(1:N_vertices,1)
     B = rand(1:N_vertices,1)
@@ -109,7 +109,7 @@ end
 
 
 # generation of stable swapped configuration
-function stable_swapped_config!(g, P, C, N_side)
+function stable_swapped_config!(g, P, C)
 # to avoid calculation steps, the input configuration should be stable as the stable_swapped_config() only permutes
 # one generator-consumer pair. so having an unstable configuration as input will probably take more steps than
 # first generating a stable configuration by gen_stable_config() and then apply stable_swapped_config()
@@ -119,13 +119,13 @@ function stable_swapped_config!(g, P, C, N_side)
     # otherwise by the following while-loop in each iteration of the loop the newly generated configuration would be swapped
     # again to obtain a stable configuration. This can not be done by P_stable_old = P because of variable assignment. In the latter case
     # P_stable_old would equal P all the time, even when the value of P is changed
-    P = swap!(P, N_side)
+    P = swap!(P)
     F = flow(g, P)
     #### ToDo: include max_iterations as variable parameter?
     max_iterations = 10000 # hardcoded number of iteration after that loop is excited
     global i = 1
     while maximum(abs.(F)) > C
-        P = swap!(P_stable_old, N_side)
+        P = swap!(P_stable_old)
         F = flow(g, P)
         #### ToDo
         if i >= max_iterations
@@ -145,7 +145,7 @@ N_removals = 0
 function eval_one_random_config(N_side, C)
     g = gen_square_grid(N_side)
     P = gen_stable_config(g, N_side, C)
-    energy(g, P, C, N_side)
+    energy(g, P, C)
 end
 
 
@@ -158,16 +158,16 @@ end
 #### ToDo: Option N_removals entfernen
 
 # core function for simulated annealing
-function sim_anneal!(g, P, C, N_side, k_max) # k_max: setting number of computation steps
+function sim_anneal!(g, P, C, k_max) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal!() tendentially finds a more stable configuration
 
     en = [ ]
     for k in 0:k_max - 1
         T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
-        P = stable_swapped_config!(g, P, C, N_side)
-        energy_old = energy(g, P_old, C, N_side)[2] # by [2] only the second value of tuple is returned (G_av)
-        energy_new = energy(g, P, C, N_side)[2] # by [2] only the second value of tuple is returned (G_av)
+        P = stable_swapped_config!(g, P, C)
+        energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
+        energy_new = energy(g, P, C)[2] # by [2] only the second value of tuple is returned (G_av)
         ΔE = energy_new - energy_old
         #### performance: let energy() calculate G_av only? Nope, G is only saving
         # to an array and is helpful for understanding the algorithm.
@@ -191,12 +191,12 @@ function eval_sim_anneal!(N_side, C, T, N_removals = 0, k_max = 10)
     g = gen_square_grid(N_side)
     P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
     P_initial = copy(P)
-    P, en = sim_anneal!(g, P, C, N_side, 0, k_max)
+    P, en = sim_anneal!(g, P, C, k_max)
     g = gen_square_grid(N_side)
-    energy_initial = energy(g, P_initial, C, N_side)
+    energy_initial = energy(g, P_initial, C)
     g = gen_square_grid(N_side)
     N_T = flows_above_thres(T, P, g)
-    energy_final = energy(g, P, C, N_side)
+    energy_final = energy(g, P, C)
     P_initial, energy_initial, P, energy_final, N_T, en
 end
 
