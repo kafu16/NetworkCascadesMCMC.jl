@@ -48,7 +48,7 @@ end
 #         g = gen_square_grid(N_side)
 #         P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
 #         P_initial = copy(P)
-#         P, en = sim_anneal!(g, P, C, 0, k_max)
+#         P, en = sim_anneal(g, P, C, 0, k_max)
 #         energy_initial = energy(g, P_initial, C)
 #         N_T = flows_above_thres(T, P_initial, g), flows_above_thres(T, P, g)
 #         locality_init = loc_1step!(P_initial, C, N_side), loc_1step_0!(P_initial, C, N_side)
@@ -60,11 +60,11 @@ end
 #     Data
 # end
 
-### data collection: collects multiple runs of eval_sim_anneal!() in one object
+### data collection: collects multiple runs of eval_sim_anneal() in one object
 function collect_data_SA_runs(N_runs, N_side, C, T, k_max)
     Data = []
     for i in 1:N_runs
-        SA_extremal = eval_sim_anneal!(N_side, C, T, 0, k_max)
+        SA_extremal = eval_sim_anneal(N_side, C, T, 0, k_max)
         push!(Data, SA_extremal)
     end
     Data

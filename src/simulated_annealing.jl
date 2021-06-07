@@ -158,9 +158,10 @@ end
 #### ToDo: Option N_removals entfernen
 
 # core function for simulated annealing
-function sim_anneal!(g, P, C, k_max) # k_max: setting number of computation steps
-    # given an initial configuration P sim_anneal!() tendentially finds a more stable configuration
+function sim_anneal(g, P_init, C, k_max) # k_max: setting number of computation steps
+    # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
+    P = copy(P_init)
     en = [ ]
     for k in 0:k_max - 1
         T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
@@ -187,11 +188,11 @@ end
 
 # applies SA on random square grid
 #### ToDo evtl. diesen code direkt in sim_anneal() einbauen. Bin mir unsicher, ob das sinnvoll ist...
-function eval_sim_anneal!(N_side, C, T, N_removals = 0, k_max = 10)
+function eval_sim_anneal(N_side, C, T, k_max)
     g = gen_square_grid(N_side)
     P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
     P_initial = copy(P)
-    P, en = sim_anneal!(g, P, C, k_max)
+    P, en = sim_anneal(g, P, C, k_max)
     g = gen_square_grid(N_side)
     energy_initial = energy(g, P_initial, C)
     g = gen_square_grid(N_side)
