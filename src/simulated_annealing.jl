@@ -137,34 +137,20 @@ function stable_swapped_config!(g, P, C)
 end
 
 
-### evaluation of energy one random configuration
-N_removals = 0
-# """
-# function for evaluating the biggest component without evaluating several other functions
-# """
-function eval_one_random_config(N_side, C)
-    g = gen_square_grid(N_side)
-    P = gen_stable_config(g, N_side, C)
-    energy(g, P, C)
-end
-
-
 ################################################################################
 ############### implementation of Simulated Annealing (SA) #####################
 ################################################################################
 
 ### key code of SA
 
-#### ToDo: Option N_removals entfernen
-
 # core function for simulated annealing
-function sim_anneal(g, P_init, C, k_max) # k_max: setting number of computation steps
+function sim_anneal(g, P_init, C, annealing_schedule, k_max) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
     P = copy(P_init)
     en = [ ]
     for k in 0:k_max - 1
-        T = temperature(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+        T = annealing_schedule(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
         P = stable_swapped_config!(g, P, C)
         energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
@@ -186,20 +172,6 @@ function sim_anneal(g, P_init, C, k_max) # k_max: setting number of computation 
     P, en
 end
 
-# applies SA on random square grid
-#### ToDo evtl. diesen code direkt in sim_anneal() einbauen. Bin mir unsicher, ob das sinnvoll ist...
-function eval_sim_anneal(N_side, C, T, k_max)
-    g = gen_square_grid(N_side)
-    P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
-    P_initial = copy(P)
-    P, en = sim_anneal(g, P, C, k_max)
-    g = gen_square_grid(N_side)
-    energy_initial = energy(g, P_initial, C)
-    g = gen_square_grid(N_side)
-    N_T = flows_above_thres(T, P, g)
-    energy_final = energy(g, P, C)
-    P_initial, energy_initial, P, energy_final, N_T, en
-end
 
 ### several functions for SA
 

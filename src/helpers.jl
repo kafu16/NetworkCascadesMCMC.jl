@@ -1,74 +1,26 @@
 #= this file contains helper functions that don't fit in any other file of
 NetworkCascadesMCMC=#
 
-# data collection
-function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_schedule, k_max)
+# data collection sqaure grids
+function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, k_max)
     Data = []
     for i in 1:N_runs
         g = gen_square_grid(N_side)
-        P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
-        P_initial = copy(P)
-        en = [ ]
-        N_removals = 0
-        for k in 0:k_max - 1
-            Temp = annealing_schedule(k)
-            P_old = copy(P) # for calculating the energy of "old" configuration
-            P = stable_swapped_config!(g, P, C)
-            energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
-            energy_new = energy(g, P, C)[2] # by [2] only the second value of tuple is returned (G_av)
-            ΔE = energy_new - energy_old
-            #### performance: let energy() calculate G_av only
+        P_init = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
+        P, en = sim_anneal(g, P_init, C, annealing_schedule, k_max)
 
-            if ΔE <= 0 # man könnte conditional auch umdrehen: if (ΔE <= 0 AND probability(ΔE, T) < rand())
-                                                                     # P = P_old
-                P
-            elseif probability(ΔE, Temp) > rand() # rand() gives random number element of [0,1]
-                P
-            else
-                P = P_old
-            end
-            g = gen_square_grid(N_side)
-            push!(en, energy_old)
-        end
-        energy_initial = energy(g, P_initial, C)
-        N_T = flows_above_thres(T, P_initial, g), flows_above_thres(T, P, g)
-        locality_init = loc_1step!(P_initial, C, N_side), loc_1step_0!(P_initial, C, N_side)
+        # calculating observables
+        energy_initial = energy(g, P_init, C)
+        N_T = flows_above_thres(T, P_init, g), flows_above_thres(T, P, g)
+        locality_init = loc_1step!(P_init, C, N_side), loc_1step_0!(P_init, C, N_side)
         locality_final = loc_1step!(P, C, N_side), loc_1step_0!(P, C, N_side)
         energy_final = energy(g, P, C)
-        SA_extremal = P_initial, energy_initial, nr_gen_con(P_initial, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final
+        SA_extremal = P_init, energy_initial, nr_gen_con(P_init, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final
         push!(Data, SA_extremal)
     end
     Data
 end
 
-
-# function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_schedule, k_max)
-#     Data = []
-#     for i in 1:N_runs
-#         g = gen_square_grid(N_side)
-#         P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
-#         P_initial = copy(P)
-#         P, en = sim_anneal(g, P, C, 0, k_max)
-#         energy_initial = energy(g, P_initial, C)
-#         N_T = flows_above_thres(T, P_initial, g), flows_above_thres(T, P, g)
-#         locality_init = loc_1step!(P_initial, C, N_side), loc_1step_0!(P_initial, C, N_side)
-#         locality_final = loc_1step!(P, C, N_side), loc_1step_0!(P, C, N_side)
-#         energy_final = energy(g, P, C)
-#         SA_extremal = P_initial, energy_initial, nr_gen_con(P_initial, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final
-#         push!(Data, SA_extremal)
-#     end
-#     Data
-# end
-
-### data collection: collects multiple runs of eval_sim_anneal() in one object
-function collect_data_SA_runs(N_runs, N_side, C, T, k_max)
-    Data = []
-    for i in 1:N_runs
-        SA_extremal = eval_sim_anneal(N_side, C, T, 0, k_max)
-        push!(Data, SA_extremal)
-    end
-    Data
-end
 
 ### safe data
 using JLD
@@ -159,3 +111,48 @@ function energy_from_data2(Data, N_runs, C, N_side)
     #Data
     g_av_energy
 end
+
+
+################################################################################
+######################### DEPRECATED FUNCTIONS##################################
+################################################################################
+
+# # data collection
+# function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_schedule, k_max)
+#     Data = []
+#     for i in 1:N_runs
+#         g = gen_square_grid(N_side)
+#         P = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
+#         P_initial = copy(P)
+#
+#         en = [ ]
+#         for k in 0:k_max - 1
+#             Temp = annealing_schedule(k)
+#             P_old = copy(P) # for calculating the energy of "old" configuration
+#             P = stable_swapped_config!(g, P, C)
+#             energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
+#             energy_new = energy(g, P, C)[2] # by [2] only the second value of tuple is returned (G_av)
+#             ΔE = energy_new - energy_old
+#             #### performance: let energy() calculate G_av only
+#
+#             if ΔE <= 0 # man könnte conditional auch umdrehen: if (ΔE <= 0 AND probability(ΔE, T) < rand())
+#                                                                      # P = P_old
+#                 P
+#             elseif probability(ΔE, Temp) > rand() # rand() gives random number element of [0,1]
+#                 P
+#             else
+#                 P = P_old
+#             end
+#             g = gen_square_grid(N_side)
+#             push!(en, energy_old)
+#         end
+#         energy_initial = energy(g, P_initial, C)
+#         N_T = flows_above_thres(T, P_initial, g), flows_above_thres(T, P, g)
+#         locality_init = loc_1step!(P_initial, C, N_side), loc_1step_0!(P_initial, C, N_side)
+#         locality_final = loc_1step!(P, C, N_side), loc_1step_0!(P, C, N_side)
+#         energy_final = energy(g, P, C)
+#         SA_extremal = P_initial, energy_initial, nr_gen_con(P_initial, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final
+#         push!(Data, SA_extremal)
+#     end
+#     Data
+# end
