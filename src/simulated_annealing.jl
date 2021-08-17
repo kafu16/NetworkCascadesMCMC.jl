@@ -228,5 +228,5 @@ function temp_ex4(k)
 end
 
 function temp_ex5(k)
-    0.99 ^ k # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+    0.99 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
