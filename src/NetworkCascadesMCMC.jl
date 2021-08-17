@@ -1,11 +1,21 @@
 module NetworkCascadesMCMC
 
+using LinearAlgebra
+
+using Plots
+### export of plots
+using Compose
+using Cairo
+using Fontconfig
+
+# performance
+using CPUTime
+
 #### ToDo: export functions
 #= dont export funcs that aren't made for interactive use and are used only
 locally in a script =#
-export collect_data_SA_runs_var_ann_shed, collect_data_SA_runs
+export collect_data_SA_runs_var_ann_shed, collect_data_SA_runs, temp_ex5
 
-using LinearAlgebra
 
 include("network_topologies.jl")
 include("power_injections.jl")
@@ -15,12 +25,6 @@ include("helpers.jl")
 include("visualization.jl")
 include("postprocessing.jl")
 
-using Plots
-### export of plots
-using Compose
-using Cairo
-using Fontconfig
-
 # # save to pdf
 # draw(PDF("bla.pdf", 16cm, 16cm), gplot(g))
 # # save to png
@@ -28,8 +32,6 @@ using Fontconfig
 # # save to svg
 # draw(SVG("bla.svg", 16cm, 16cm), gplot(g))
 
-# performance
-using CPUTime
 
 # Hier nur Hauptfunktion, die alles zusammensetzt.
 
