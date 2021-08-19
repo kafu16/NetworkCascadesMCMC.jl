@@ -1,5 +1,5 @@
 ################################################################################
-##### grid operations (funtions that change or refer to  grid topology) ########
+# grid operations (funtions that change/refer to  grid topology) used for SA ###
 ################################################################################
 
 
@@ -51,7 +51,7 @@ function energy(g_init, P, C) # calculates energy of step k, C: threshold that m
     g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
-    linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numberd in an array
+    linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numbered in an array
     linefailure_indizes = shuffle!(linefailure_indizes) # positions of edges in linefailure_indizes is randomly permuted by shuffle!()
     # randomness is redundant unless m in following for-loop is replaced by a number smaller than m
 
@@ -64,13 +64,12 @@ function energy(g_init, P, C) # calculates energy of step k, C: threshold that m
     # end
     # # Für Näherung, d.h. man zieht nur N edges anstatt alle, muss man das nachfolgenden m durch N ersetzen
 
-    G = zeros(m)
+    G = [ ]
     for i in 1:m # for loop for randomly chosen N_vertices linefailures
         g = linefailure!(g, linefailure_indizes[i])
         g = cascade!(g, P, C)
-        #global G[i] = ne(g)
-        global G[i] = biggest_component(g) # G: size of biggest connected component, global lets the values of G saved after each run of loop,
-        # otherwise G would be overwritten in each run of loop
+
+        G = append!(G, biggest_component(g))
         g = copy(g_init)
     end
 
