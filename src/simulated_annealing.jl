@@ -4,7 +4,7 @@
 
 
 ### failure/removal of edge that causes cascade
-function linefailure!(g, i) # edge i is removed
+function linefailure!(g::LightGraphs.AbstractGraph, i::Integer) # edge i is removed
     B = Array(incidence_matrix(g, oriented=true))
     rem_edge!(g, findfirst(isodd, B[:, i]), findlast(isodd, B[:, i]))
     g
@@ -12,7 +12,7 @@ end
 
 
 ### cascade
-function cascade!(g, P, C) # removes all edges whose flow is bigger than C -> calculates flow again and so on until all flows are smaller than C
+function cascade!(g::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # removes all edges whose flow is bigger than C -> calculates flow again and so on until all flows are smaller than C
     F = flow(g, P)
     while maximum(abs.(F)) > C
 
@@ -35,7 +35,7 @@ end
 
 
 ### measurements of energy() (see below)
-function biggest_component(g) # gives biggest connected component of graph g
+function biggest_component(g::LightGraphs.AbstractGraph) # gives biggest connected component of graph g
     maximum(length.(LightGraphs.connected_components(g))) # connected_components() returns vector whose components contain connected vertices
     # so the length of a component is the size of a connected graph
     # so here the biggest connected graph out of all vertices is chosen
@@ -47,7 +47,7 @@ end
 ################################################################################
 using Statistics
 
-function energy(g_init, P, C) # calculates energy of step k, C: threshold that marks line failure,
+function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
     g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
@@ -83,7 +83,7 @@ end
 ################################################################################
 
 ### swap of configurations
-function swap!(P) # swaps randomly chosen generator-consumer pair
+function swap!(P::Array{Float64,1}) # swaps randomly chosen generator-consumer pair
     N_vertices = length(P)
     A = rand(1:N_vertices,1)
     B = rand(1:N_vertices,1)
@@ -108,7 +108,7 @@ end
 
 
 # generation of stable swapped configuration
-function stable_swapped_config!(g, P, C)
+function stable_swapped_config!(g::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat)
 # to avoid calculation steps, the input configuration should be stable as the stable_swapped_config() only permutes
 # one generator-consumer pair. so having an unstable configuration as input will probably take more steps than
 # first generating a stable configuration by gen_stable_config() and then apply stable_swapped_config()
@@ -143,7 +143,7 @@ end
 ### key code of SA
 
 # core function for simulated annealing
-function sim_anneal(g, P_init, C, annealing_schedule, k_max) # k_max: setting number of computation steps
+function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, k_max::Integer) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
     P = copy(P_init)
@@ -174,7 +174,7 @@ end
 
 ### several functions for SA
 
-function probability(ΔE, T) # probability function depends on ΔE and on temperature function
+function probability(ΔE::AbstractFloat, T::AbstractFloat) # probability function depends on ΔE and on temperature function
     exp( - ΔE / T) # Boltzmann's constant k_B is set to one
 end
 
@@ -183,49 +183,49 @@ end
 ################################################################################
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
-function temperature(k)
+function temperature(k::Integer)
     0.99 ^ k
     #0.999 ^ (floor(k/4))
     #1. / (1 + 0.0001 * floor(k/4))
 end
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
-function temp1(k)
+function temp1(k::Integer)
     1. / (1 + 0.0001 * floor(k/4))
 end
 
-function temp2(k)
+function temp2(k::Integer)
     1. / (1 + 0.0007 * floor(k/4))
 end
 
-function temp3(k)
+function temp3(k::Integer)
     1. / (1 + 0.0015 * floor(k/4))
 end
 
-function temp4(k)
+function temp4(k::Integer)
     1. / (1 + 0.0025 * floor(k/4))
 end
 
-function temp5(k)
+function temp5(k::Integer)
     10. / (1 + 0.02 * k)
 end
 
-function temp_ex1(k)
+function temp_ex1(k::Integer)
     0.999 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex2(k)
+function temp_ex2(k::Integer)
     0.9995 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex3(k)
+function temp_ex3(k::Integer)
     0.99975 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex4(k)
+function temp_ex4(k::Integer)
     0.9999 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex5(k)
+function temp_ex5(k::Integer)
     0.99 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
