@@ -1,18 +1,18 @@
-#= this file contains helper functions that don't fit in any other file of
-NetworkCascadesMCMC=#
+#= this file contains helper functions that don't fit "thematically" in any other
+file of NetworkCascadesMCMC=#
 
 # data collection sqaure grids
-function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, k_max)
+function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, steps_per_temp, k_max)
     Data = []
     for i in 1:N_runs
         g = gen_square_grid(N_side)
         P_init = gen_stable_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
-        P, en = sim_anneal(g, P_init, C, annealing_schedule, k_max)
+        P, en = sim_anneal(g, P_init, C, annealing_schedule, steps_per_temp, k_max)
 
         # calculating observables
         energy_initial = energy(g, P_init, C)
         N_T = flows_above_thres(T, P_init, g), flows_above_thres(T, P, g)
-        locality_init = loc_1step!(P_init, C, N_side), loc_1step_0!(P_init, C, N_side)
+        locality_init = loc_1step(g, P_init, C), loc_1step_0!(P_init, C, N_side)
         locality_final = loc_1step!(P, C, N_side), loc_1step_0!(P, C, N_side)
         energy_final = energy(g, P, C)
         SA_extremal = P_init, energy_initial, nr_gen_con(P_init, N_side), P, energy_final, nr_gen_con(P, N_side), N_T, en, locality_init, locality_final

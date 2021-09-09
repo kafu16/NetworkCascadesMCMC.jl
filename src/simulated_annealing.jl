@@ -143,13 +143,13 @@ end
 ### key code of SA
 
 # core function for simulated annealing
-function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, k_max::Integer) # k_max: setting number of computation steps
+function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
     P = copy(P_init)
     en = [ ]
     for k in 0:k_max - 1
-        T = annealing_schedule(k) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+        T = annealing_schedule(k,steps_per_temp) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
         P = stable_swapped_config!(g, P, C)
         energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
@@ -171,6 +171,19 @@ function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::A
     P, en
 end
 
+function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer)
+    energies = []
+    P_finals = []
+    for i in 1:N_runs
+        P, en = sim_anneal(g, P_init, C, annealing_schedule, steps_per_temp, k_max)
+        push!(energies, en)
+        push!(P_finals, P)
+    end
+    N_vertices = length(P_init)
+    JLD.save(filepath, "energies",energies, "P_init",P_init, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    Data
+end
+
 
 ### several functions for SA
 
@@ -190,42 +203,42 @@ function temperature(k::Integer)
 end
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
-function temp1(k::Integer)
-    1. / (1 + 0.0001 * floor(k/4))
+function temp1(k::Integer, steps_per_temp::Integer)
+    1. / (1 + 0.0001 * floor(k/steps_per_temp))
 end
 
-function temp2(k::Integer)
-    1. / (1 + 0.0007 * floor(k/4))
+function temp2(k::Integer, steps_per_temp::Integer)
+    1. / (1 + 0.0007 * floor(k/steps_per_temp))
 end
 
-function temp3(k::Integer)
-    1. / (1 + 0.0015 * floor(k/4))
+function temp3(k::Integer, steps_per_temp::Integer)
+    1. / (1 + 0.0015 * floor(k/steps_per_temp))
 end
 
-function temp4(k::Integer)
-    1. / (1 + 0.0025 * floor(k/4))
+function temp4(k::Integer, steps_per_temp::Integer)
+    1. / (1 + 0.0025 * floor(k/steps_per_temp))
 end
 
 function temp5(k::Integer)
     10. / (1 + 0.02 * k)
 end
 
-function temp_ex1(k::Integer)
-    0.999 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+function temp_ex1(k::Integer, steps_per_temp::Integer)
+    0.999 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex2(k::Integer)
-    0.9995 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+function temp_ex2(k::Integer, steps_per_temp::Integer)
+    0.9995 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex3(k::Integer)
-    0.99975 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+function temp_ex3(k::Integer, steps_per_temp::Integer)
+    0.99975 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex4(k::Integer)
-    0.9999 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+function temp_ex4(k::Integer, steps_per_temp::Integer)
+    0.9999 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex5(k::Integer)
-    0.99 ^ (floor(k/4)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+function temp_ex5(k::Integer, steps_per_temp::Integer)
+    0.99 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
