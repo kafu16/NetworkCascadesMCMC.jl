@@ -1,3 +1,6 @@
+#= This file contains functions that calculate observerbles out of the "raw" simulation
+data. =#
+
 struct Locality
     loc_1step_init
     loc_1step_final
@@ -11,15 +14,14 @@ struct Nr_gen_con
     gen_con
 end
 
-""" Function that takes .jld as input containing the value of the energy for each
-    iteration step of simulated annealing and executes multiple postprocessing
-    functions on that energy values. The resulting postprocessing data is save as
-    another .jld
+""" Function that takes .jld-file as input containing the value of the energy for
+    each iteration step of simulated annealing and executes multiple postprocessing
+    functions. The resulting postprocessing data is saved as another .jl-file.
 """
 function postprocess_sim_anneal(filepath_in, filepath_out, T)
     Data_loaded = JLD.load(filepath_in)
     energies = Data_loaded["energies"]
-    P_init = Data_loaded["P_init"]
+    P_inits = Data_loaded["P_inits"]
     P_finals = Data_loaded["P_finals"]
     N_vertices = Data_loaded["N_vertices"]
     g = Data_loaded["Grid"]
@@ -35,8 +37,8 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
     N_T_final = []
     locality = []
     #locality_0 = []
-    nr_gen_con_init = []
-    nr_gen_con_final = []
+    gen_gen_init = []; con_con_init = []; gen_con_init = []
+    gen_gen_final = []; con_con_final = []; gen_con_final = []
 
     for i in 1:N_runs
 
@@ -46,27 +48,30 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
         push!(energy_final, energies[i][k_max])
 
         # number of flows above a certain threshold for initial and final configutations
-        push!(N_T_init, flows_above_thres(T, P_init, g))
-        push!(N_T_init, flows_above_thres(T, P_finals[i], g))
+        push!(N_T_init, flows_above_thres(T, P_inits[i], g))
+        push!(N_T_final, flows_above_thres(T, P_finals[i], g))
 
-        # locality
-        # locality_init_final = loc_1step(g, P_init, C), loc_1step(g, P_finals[i], C)
+        # # locality
+        # locality_init_final = loc_1step(g, P_inits[i], C), loc_1step(g, P_finals[i], C)
         # push!(locality, locality_init_final)
-        # locality_0_init_final = loc_1step_0(g, P_init, C), loc_1step_0(g, P_finals[i], C)
+        # locality_0_init_final = loc_1step_0(g, P_inits[i], C), loc_1step_0(g, P_finals[i], C)
         # push!(locality_0, locality_0_init_final)
-        locality_single_run = Locality(loc_1step(g, P_init, C),loc_1step(g, P_finals[i], C),loc_1step_0(g, P_init, C),loc_1step_0(g, P_finals[i], C))
+
+
+        locality_single_run = Locality(loc_1step(g, P_inits[i], C),loc_1step(g, P_finals[i], C),loc_1step_0(g, P_inits[i], C),loc_1step_0(g, P_finals[i], C))
         push!(locality, locality_single_run)
 
         # nr_gen_con
-        gen_gen_init, con_con_init, gen_con_init = nr_gen_con(g,P_init)
-        nr_gen_con_single_run_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
-        push!(nr_gen_con_init,nr_gen_con_single_run_init)
-        gen_gen_final, con_con_final, gen_con_final = nr_gen_con(g,P_finals[i])
-        nr_gen_con_single_run_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
-        push!(nr_gen_con_final,nr_gen_con_single_run_final)
+        gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
+        push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
+        gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
+        push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
 
     end
-    JLD.save(filepath_out, "energies",energies, "P_init",P_init, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
+    nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
+    nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
+
+    JLD.save(filepath_out, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
         "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
         "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
@@ -74,88 +79,16 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
         #, "locality_0",locality_0)
 end
 
-
-# histograms
-function flow_single_sample(SData, i, j) # i: sample number, j = 1: random, j = 4: optimized
-    N_side = SData["N_side"]
-    g = gen_square_grid(N_side)
-    Data = SData["Data"]
-    P = Data[i][j]
-    F = flow(g, P)
-    x = abs.(F)
-end
-
-function flows_N_runs(SData, j) # i: sample number, j = 1: random grids, j = 4: optimised grids
-    N_side = SData["N_side"]
-    g = gen_square_grid(N_side)
-    Data = SData["Data"]
-    All_flows = [ ]
-    N_runs = length(Data)
-    P = Data[1][j]
-    F = flow(g, P)
-    All_flows = copy(F)
-    for i in 2:N_runs
-        P = Data[i][j]
-        F = flow(g, P)
-        append!(All_flows, F)
-    end
-    All_flows
-    x = abs.(All_flows)
-end
-
-function high_gc_low_Gav(SData, gen_con, G_av_final)
-    Data = SData["Data"]
-    N_runs = length(Data)
-    configs_high_gc_low_Gav = [ ]
-    for i in 1:N_runs
-        if Data[i][6][3] > gen_con && Data[i][5][2] < G_av_final # 23 is mean G_av plus STD
-            configs_high_gc_low_Gav = push!(configs_high_gc_low_Gav, Data[i])
-        end
-    end
-    configs_high_gc_low_Gav
-end
-
-function flows_high_gc_low_Gav(Data, N_side, j) # i: sample number, j = 1: random grids, j = 4: optimised grids
-    g = gen_square_grid(N_side)
-    All_flows = [ ]
-    N_runs = length(Data)
-    P = Data[1][j]
-    F = flow(g, P)
-    All_flows = copy(F)
-    for i in 2:N_runs
-        P = Data[i][j]
-        F = flow(g, P)
-        append!(All_flows, F)
-    end
-    All_flows
-    x = abs.(All_flows)
-end
-
-function weights_mean_err(SData, j, nbins) # j = 1: random grids, j = 4: optimised grids
-    weights = [ ]
-    N_bars = nbins - 1
-    for i in 1:N_bars
-        push!(weights, [ ])
-    end
-    Data = SData["Data"]
-    N_runs = length(Data)
-    bins = range(0.0, 1.0, length = nbins)
-    for i in 1:N_runs
-        flows = flow_single_sample(SData, i, j)
-        h = fit(Histogram, flows, bins)
-        h = normalize(h, mode=:probability)
-        weightvalues = h.weights
-        for i in 1:N_bars
-            append!(weights[i], weightvalues[i])
-        end
-    end
-    weights_av = [ ]
-    weights_err = [ ]
-    for i in 1:N_bars
-        append!(weights_av, mean(weights[i]))
-        append!(weights_err, 1 / sqrt(N_runs) * Statistics.std(weights[i]))
-    end
-    weights_av, weights_err
+### results SA: calculating Gav_av and STD_Gav (averaged over all runs)
+function Gav_av_STD_Gav(Data_loaded)
+    N_runs = Data_loaded["N_runs"]
+    # random grids
+    Gav_av_init = round.(mean(Data_loaded["energy_init"]); digits = 2)
+    STD_Gav_init = round.(1 / sqrt(N_runs) * std(Data_loaded["energy_init"]; corrected=true); digits = 2) # corrected=true is default of std(), so it could be omitted
+    # minimized G_av
+    Gav_av_final = round.(mean(Data_loaded["energy_final"]); digits = 2)
+    STD_Gav_final = round.(1 / sqrt(N_runs) * std(Data_loaded["energy_final"]; corrected=true); digits = 2)
+    Gav_av_init, STD_Gav_init, Gav_av_final, STD_Gav_final
 end
 
 """ Calculates number of edges gen-gen, con-con, gen-con.
@@ -184,27 +117,25 @@ function nr_gen_con(g, P)
 end
 
 
-function nr_gen_con_av(SData, col)
-    Data = SData["Data"]
-    N_runs = SData["N_runs"]
-    gen_gen_av = mean(collect_data2(Data, col, 1))
-    con_con_av = mean(collect_data2(Data, col, 2))
-    gen_con_av = mean(collect_data2(Data, col, 3))
-    gen_gen_std = 1 / sqrt(N_runs) * std(collect_data2(Data, col, 1))
-    con_con_std = 1 / sqrt(N_runs) * std(collect_data2(Data, col, 2))
-    gen_con_std = 1 / sqrt(N_runs) * std(collect_data2(Data, col, 3))
+function nr_gen_con_av(Data_loaded, P_rand_opt)
+    N_runs = Data_loaded["N_runs"]
+    gen_gen_av = mean(Data_loaded[P_rand_opt].gen_gen)
+    con_con_av = mean(Data_loaded[P_rand_opt].con_con)
+    gen_con_av = mean(Data_loaded[P_rand_opt].gen_con)
+    gen_gen_std = 1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].gen_gen)
+    con_con_std = 1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].con_con)
+    gen_con_std = 1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].gen_con)
     gen_gen_av, gen_gen_std, con_con_av, con_con_std, gen_con_av, gen_con_std
 end
 
-function nr_gen_con_av_diff(SData)
-    Data = SData["Data"]
-    N_runs = SData["N_runs"]
-    gen_gen_av = mean(collect_data2(Data, 3, 1) - collect_data2(Data, 6, 1))
-    con_con_av = mean(collect_data2(Data, 3, 2) - collect_data2(Data, 6, 2))
-    gen_con_av = mean(collect_data2(Data, 3, 3) - collect_data2(Data, 6, 3))
-    gen_gen_std = sqrt((1 / sqrt(N_runs) * std(collect_data2(Data, 3, 1)))^2 + (1 / sqrt(N_runs) * std(collect_data2(Data, 6, 1)))^2) # the measurement uncertainties sum up
-    con_con_std = sqrt((1 / sqrt(N_runs) * std(collect_data2(Data, 3, 2)))^2 + (1 / sqrt(N_runs) * std(collect_data2(Data, 6, 2)))^2)
-    gen_con_std = sqrt((1 / sqrt(N_runs) * std(collect_data2(Data, 3, 3)))^2 + (1 / sqrt(N_runs) * std(collect_data2(Data, 6, 3)))^2)
+function nr_gen_con_av_diff(Data_loaded)
+    N_runs = Data_loaded["N_runs"]
+    gen_gen_av = mean(Data_loaded["nr_gen_con_init"].gen_gen - Data_loaded["nr_gen_con_final"].gen_gen)
+    con_con_av = mean(Data_loaded["nr_gen_con_init"].con_con - Data_loaded["nr_gen_con_final"].con_con)
+    gen_con_av = mean(Data_loaded["nr_gen_con_init"].gen_con - Data_loaded["nr_gen_con_final"].gen_con)
+    gen_gen_std = sqrt((1 / sqrt(N_runs) * std(Data_loaded["nr_gen_con_init"].gen_gen))^2 + (1 / sqrt(N_runs) * std(Data_loaded["nr_gen_con_final"].gen_gen))^2) # the measurement uncertainties sum up
+    con_con_std = sqrt((1 / sqrt(N_runs) * std(Data_loaded["nr_gen_con_init"].con_con))^2 + (1 / sqrt(N_runs) * std(Data_loaded["nr_gen_con_final"].con_con))^2)
+    gen_con_std = sqrt((1 / sqrt(N_runs) * std(Data_loaded["nr_gen_con_init"].gen_con))^2 + (1 / sqrt(N_runs) * std(Data_loaded["nr_gen_con_final"].gen_con))^2)
     gen_gen_av, gen_gen_std, con_con_av, con_con_std, gen_con_av, gen_con_std
 end
 

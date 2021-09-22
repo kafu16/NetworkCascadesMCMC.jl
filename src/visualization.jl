@@ -3,8 +3,9 @@
 #### visualisation of square grid
 
 ### embed square grid
-function set_vertex_locs(N_side) # sets vertex locations, example usage: gplot(g, locs_x, locs_y) while locs_x, locs_y = set_vertex_locs()
-    N_vertices = N_side * N_side
+function set_vertex_locs(P) # sets vertex locations, example usage: gplot(g, locs_x, locs_y) while locs_x, locs_y = set_vertex_locs()
+    N_vertices = length(P)
+    N_side = sqrt(N_vertices)
     locs_x = zeros(Int64, N_vertices) # generation of arrays
     locs_y = zeros(Int64, N_vertices)
 
@@ -73,9 +74,9 @@ end
 # g = gplot(g, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
 
 ### visualization of graph
-function visualize_graph(g, P, N_side)
+function visualize_graph(g, P)
     F = flow(g, P)
-    locs_x, locs_y = set_vertex_locs(N_side)
+    locs_x, locs_y = set_vertex_locs(P)
     nodefillc = set_colours(P)
 
     gplot(g, locs_x, locs_y, nodefillc = nodefillc, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
@@ -83,9 +84,9 @@ function visualize_graph(g, P, N_side)
     #gplot(g, locs_x, locs_y, nodefillc = nodefillc)
 end
 
-function visualize_graph_vlabel(g, P, N_side)
+function visualize_graph_vlabel(g, P)
     F = flow(g, P)
-    locs_x, locs_y = set_vertex_locs(N_side)
+    locs_x, locs_y = set_vertex_locs(P)
     nodefillc = set_colours2(P)
 
     #gplot(g, locs_x, locs_y, nodefillc = nodefillc, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
@@ -104,9 +105,8 @@ end
 # for evaluation of visualize_graph_after_linefailure_cascade: it must be line ⋜ m:
 #B = Array(incidence_matrix(g, oriented=true))
 #m = size(B)[2]
-function visualize_graph_after_linefailure_cascade(P, C, N_side, line)
-    g = gen_square_grid(N_side)
+function visualize_graph_after_linefailure_cascade(g, P, C, line)
     g = linefailure!(g, line)
     g = cascade!(g, P, C)
-    visualize_graph(g, P, N_side)
+    visualize_graph(g, P)
 end

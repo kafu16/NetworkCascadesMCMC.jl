@@ -18,7 +18,7 @@ function gen_rand_config(N_side) # generates random configuration P (see below)
     shuffle!(P) # randomly permutes entries of array
 end
 
-function gen_stable_config(g, N_side, C) # generation of initial stable random configuration P
+function gen_stable_square_config(g, N_side, C) # generation of initial stable random configuration P
 #### ToDo build: return error when stable config is not possible due to a too low C
     P = gen_rand_config(N_side)
     F = flow(g, P)
@@ -27,4 +27,13 @@ function gen_stable_config(g, N_side, C) # generation of initial stable random c
         F = flow(g, P)
     end
     P
+end
+
+function gen_multiple_stable_square_configs(g, N_side, C, N_runs)
+    P_inits = []
+    for i in 1:N_runs
+        P_init = gen_stable_square_config(g, N_side, C)
+        push!(P_inits, P_init)
+    end
+    P_inits
 end
