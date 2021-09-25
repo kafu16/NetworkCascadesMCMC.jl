@@ -28,7 +28,6 @@ using IterativeSolvers
 #     F_rounded = round.(F; digits = 2)
 # end
 
-using LightGraphs
 
 function flow(g, P) # calculates the flow of graph g for a certain configuration P
     B = Array(incidence_matrix(g, oriented=true)) # nxm oriented incidence matrix B

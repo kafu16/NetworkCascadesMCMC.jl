@@ -2,9 +2,6 @@ module NetworkCascadesMCMC
 
 ####################### import external packages ###############################
 using LinearAlgebra
-using LightGraphs
-
-
 
 # performance
 using CPUTime
