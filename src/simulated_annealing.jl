@@ -171,7 +171,7 @@ function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::A
     P, en
 end
 
-function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     energies = []
     P_finals = []
     for i in 1:N_runs
@@ -182,7 +182,7 @@ function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_i
     end
     N_vertices = length(P_inits[1])
     #N_vertices = length(P_init)
-    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
     #JLD.save(filepath, "energies",energies, "P_init",P_init, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
