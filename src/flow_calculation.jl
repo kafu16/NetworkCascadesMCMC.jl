@@ -1,6 +1,7 @@
 ### flow calculation
 using IterativeSolvers
 
+
 # # N_vertices: number of vertices
 # # m: number of edges
 # function flow(g, P) # calculates the flow of graph g for a certain configuration P
@@ -26,6 +27,8 @@ using IterativeSolvers
 #     F = transpose(B) * φ # F_e: Flow of edge e, F: Vector of all flows
 #     F_rounded = round.(F; digits = 2)
 # end
+
+using LightGraphs
 
 function flow(g, P) # calculates the flow of graph g for a certain configuration P
     B = Array(incidence_matrix(g, oriented=true)) # nxm oriented incidence matrix B
