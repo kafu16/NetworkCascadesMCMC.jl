@@ -4,6 +4,7 @@ NetworkCascadesMCMC including plotting functions=#
 using Plots
 using StatsPlots, StatsBase
 using LaTeXStrings
+
 # export of plots
 using Compose
 using Cairo
@@ -11,8 +12,6 @@ using Fontconfig
 
 #safe data
 using JLD
-using Dates ##### ToDo for saving date and time in filename
-#Dates.now(Dates.UTC)
 
 # data collection sqaure grids
 function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, steps_per_temp, k_max)
@@ -37,9 +36,9 @@ end
 """ Writes parameters of either the core-simulation-.jld-file  or the
     postprocess-.jld-file to a .txt-file.
 """
-function write_out_params(Data_loaded)
-    open("params.txt", "a") do io
-        write(io, "PARAMETERS:\n\n")
+function write_out_params(Data_loaded, filename)
+    open(filename, "a") do io
+        write(io, "PARAMETERS\n")
         write(io, "Grid: "); write(io, string(Data_loaded["Grid"])); write(io, "\n")
         write(io, "N_vertices: "); write(io, string(Data_loaded["N_vertices"])); write(io, "\n")
         write(io, "Annealing schedule: "); write(io, Data_loaded["annealing_schedule"]); write(io, "\n")
@@ -47,59 +46,55 @@ function write_out_params(Data_loaded)
         write(io, "k_max: "); write(io, string(Data_loaded["k_max"])); write(io, "\n")
         write(io, "C: "); write(io, string(Data_loaded["C"])); write(io, "\n")
         write(io, "N_runs: "); write(io, string(Data_loaded["N_runs"])); write(io, "\n")
-    end
-end
-
-""" Writes parameters of either the core-simulation-.jld-file  or the
-    postprocess-.jld-file to a .txt-file.
-"""
-function write_out_params(Data_loaded)
-    open("params_post-process.txt", "a") do io
-        write(io, "PARAMETERS:\n\n")
-        write(io, "Grid: "); write(io, string(Data_loaded["Grid"])); write(io, "\n")
-        write(io, "N_vertices: "); write(io, string(Data_loaded["N_vertices"])); write(io, "\n")
-        write(io, "Annealing schedule: "); write(io, Data_loaded["annealing_schedule"]); write(io, "\n")
-        write(io, "Steps per temp: "); write(io, string(Data_loaded["steps_per_temp"])); write(io, "\n")
-        write(io, "k_max: "); write(io, string(Data_loaded["k_max"])); write(io, "\n")
-        write(io, "C: "); write(io, string(Data_loaded["C"])); write(io, "\n")
-        write(io, "N_runs: "); write(io, string(Data_loaded["N_runs"])); write(io, "\n")
+        write(io, "\n")
     end
 end
 
 """ Writes postprocessing data of the postprocess-.jld-file to a .txt-file.
 """
-function write_out_postprocess(Data_loaded)
-
+function write_out_postprocess(Data_loaded, filename)
     gen_gen_av_init, gen_gen_std_init, con_con_av_init, con_con_std_init, gen_con_av_init, gen_con_std_init = nr_gen_con_av(Data_loaded, "nr_gen_con_init")
     gen_gen_av_final, gen_gen_std_final, con_con_av_final, con_con_std_final, gen_con_av_final, gen_con_std_final = nr_gen_con_av(Data_loaded, "nr_gen_con_final")
-    open("params_post-process.txt", "a") do io
-        write(io, "Postprocessing data:\n\n")
+    loc = locality(Data_loaded)
 
-        write(io, "Gav_av for random and optimized grids:\n")
-        write(io, "Gav_av_init: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[1])); write(io, "\n")
-        write(io, "STD_Gav_init: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[2])); write(io, "\n")
-        write(io, "Gav_av_final: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[3])); write(io, "\n")
-        write(io, "STD_Gav_final: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[4])); write(io, "\n")
+    open(filename, "a") do io
+        write(io, "POSTPROCESSING DATA\n\n")
+
+        write(io, "Gav_av for random and optimized configurations:\n")
+        write(io, "Gav_av_init: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[1]))
+        write(io, " +/- "); write(io, string(Gav_av_STD_Gav(Data_loaded)[2])); write(io, "\n")
+        write(io, "Gav_av_final: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[3]))
+        write(io, " +/- "); write(io, string(Gav_av_STD_Gav(Data_loaded)[4])); write(io, "\n")
         write(io, "\n\n")
 
-        write(io, "Number of edges between generators and consumers for random and optimized grids:\n")
-        write(io, "Random grids\n")
+        write(io, "Number of edges between generators and consumers for random and optimized configurations:\n")
+        write(io, "Random configurations\n")
         write(io, "gen-gen "); write(io, string(gen_gen_av_init)); write(io, " +/- "); write(io, string(gen_gen_std_init))
         write(io, "\ncon-con "); write(io, string(con_con_av_init)); write(io, " +/- "); write(io, string(con_con_std_init))
         write(io, "\ngen-con "); write(io, string(gen_con_av_init)); write(io, " +/- "); write(io, string(gen_con_std_init))
         write(io, "\n\n")
-        write(io, "Grids with optimized G_av\n")
+        write(io, "Configurations with optimized G_av\n")
         write(io, "gen-gen "); write(io, string(gen_gen_av_final)); write(io, " +/- "); write(io, string(gen_gen_std_final))
         write(io, "\ncon-con "); write(io, string(con_con_av_final)); write(io, " +/- "); write(io, string(con_con_std_final))
         write(io, "\ngen-con "); write(io, string(gen_con_av_final)); write(io, " +/- "); write(io, string(gen_con_std_final))
+        write(io, "\n\n")
+
+        write(io, "Locality:\n")
+        write(io, "Random configurations\n")
+        write(io, "<D_1> "); write(io, string(loc[1][5])); write(io, " +/- "); write(io, string(loc[1][6]))
+        write(io, " <D_0> "); write(io, string(loc[2][5])); write(io, " +/- "); write(io, string(loc[1][6]))
+
+        write(io, "\n\n")
+        write(io, "Configurations with optimized G_av\n")
+        write(io, "<D_1> "); write(io, string(loc[1][7])); write(io, " +/- "); write(io, string(loc[1][8]))
+        write(io, " <D_0> "); write(io, string(loc[2][7])); write(io, " +/- "); write(io, string(loc[2][8]))
+        write(io, "\n\n")
     end
 end
 
 
-
-
-function flows_above_thres(T, P_SA, g) # gives number of flows above threshold T
-    F = flow(g, P_SA)
+function flows_above_thres(T, P, g) # gives number of flows above threshold T
+    F = flow(g, P)
     count(x -> x > T, abs.(F))
 end
 
@@ -186,24 +181,80 @@ function energy_from_data2(Data, N_runs, C, N_side)
     g_av_energy
 end
 
+function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, gen_con, G_av_final)
+    Data_loaded = JLD.load(filepath_in)
+    energies = Data_loaded["energies"]
+    P_inits = Data_loaded["P_inits"]
+    P_finals = Data_loaded["P_finals"]
+    N_vertices = Data_loaded["N_vertices"]
+    g = Data_loaded["Grid"]
+    ann_sched = Data_loaded["annealing_schedule"]
+    steps_per_temp = Data_loaded["steps_per_temp"]
+    C = Data_loaded["C"]
+    k_max = Data_loaded["k_max"]
+    N_runs = Data_loaded["N_runs"]
+
+    energies_high_gc_low_Gav = []
+    P_inits_high_gc_low_Gav = []
+    P_finals_high_gc_low_Gav = []
+
+    energy_init = []; energy_final = []
+    N_T_init = []; N_T_final = []
+    loc_1step_init = []; loc_1step_final = []
+    loc_1step_0_init = []; loc_1step_0_final = []
+    gen_gen_init = []; con_con_init = []; gen_con_init = []
+    gen_gen_final = []; con_con_final = []; gen_con_final = []
+
+
+    for i in 1:N_runs
+        if nr_gen_con(g,P_finals[i])[3] > gen_con && energies[i][k_max] < G_av_final
+
+            push!(energies_high_gc_low_Gav, Data_loaded["energies"][i])
+            push!(P_inits_high_gc_low_Gav, Data_loaded["P_inits"][i])
+            push!(P_finals_high_gc_low_Gav, Data_loaded["P_finals"][i])
+
+            # calculating observables
+            # energy of initial and final configutations
+            push!(energy_init, energies[i][1])
+            push!(energy_final, energies[i][k_max])
+
+            # number of flows above a certain threshold for initial and final configutations
+            push!(N_T_init, flows_above_thres(T, P_inits[i], g))
+            push!(N_T_final, flows_above_thres(T, P_finals[i], g))
+
+            # locality
+            loc_1step_init_single_run = loc_1step(g, P_inits[i], C)
+            loc_1step_final_single_run = loc_1step(g, P_finals[i], C)
+            loc_1step_0_init_single_run = loc_1step_0(g, P_inits[i], C)
+            loc_1step_0_final_single_run = loc_1step_0(g, P_finals[i], C)
+            push!(loc_1step_init, loc_1step_init_single_run)
+            push!(loc_1step_final, loc_1step_final_single_run)
+            push!(loc_1step_0_init, loc_1step_0_init_single_run)
+            push!(loc_1step_0_final, loc_1step_0_final_single_run)
+
+            # nr_gen_con
+            gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
+            push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
+            gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
+            push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
+
+        end
+    end
+
+    N_runs_high_gc_low_Gav = length(energy_final)
+    nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
+    nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
+    locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
+
+    JLD.save(filepath_out, "energies",energies_high_gc_low_Gav, "P_inits",P_inits_high_gc_low_Gav, "P_finals",P_finals_high_gc_low_Gav, "N_vertices",N_vertices, "Grid",g,
+        "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs_high_gc_low_Gav,
+        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
+        "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
+end
+
 ################################################################################
 ################################## PLOTTING ####################################
 ################################################################################
-
-""" Generates multiple plots and stores them in 'directory'.
-"""
-function generate_plots(directory, Data_loaded)
-#### TODo add filepath to plotting functions
-
-    # create folder for plots, use relative file path
-
-    # save plots in folder
-    plot_Gav_av(Data_loaded)
-    plot_histogram_random_vs_minimized_G_av(Data_loaded)
-    Run_Nr = 1; plot_Gav_single_run(Data_loaded, Run_Nr)
-
-end
-
 
 function visualize_data(Data_loaded, P_rand_opt, Run_Nr) # for random grid: rand_opt=1 for optimized grid: rand_opt=4
     P = Data_loaded[P_rand_opt][Run_Nr]
@@ -241,11 +292,7 @@ end
     for single bins, so the average and standard deviation over all first bins and
     separately for all second bins  etc. is calculated.
 """
-function plot_histogram_random_vs_minimized_G_av(Data_loaded)
-    nbins = 11
-    random = weights_mean_err(Data_loaded, "P_inits", nbins)
-    minimized = weights_mean_err(Data_loaded, "P_finals", nbins)
-
+function plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins,xlabelstr,ylabelstr,labelstr,titlestr)
     weights1 = convert(Vector{Float64}, random[1])
     weights2 = convert(Vector{Float64}, minimized[1])
     errors1 = convert(Vector{Float64}, random[2])
@@ -253,26 +300,52 @@ function plot_histogram_random_vs_minimized_G_av(Data_loaded)
 
     # input in one vector where first half of vector refers to first group and second half to second group
     weights = append!(weights1, weights2)
-    sx = repeat(["B", "A"], inner = 10)
+    sx = repeat(["B", "A"], inner = nbins - 1)
     errors = append!(errors1, errors2)
 
     groupedbar(weights, yerr = errors, group = sx,
-            xlabel = L"\textrm{10 bins of width 0.10 from bin 1 = } [0.00,0.10) \textrm{ to bin 10 = } [0.90,1.00)",
+            xlabel = xlabelstr,
             xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
-            ylabel = L"\textrm{Normalized probability}",
-            label = [L"\textrm{Grids with low } G_{av}" L"\textrm{Random grids}"],
+            ylabel = ylabelstr,
+            label = labelstr,
             title = L"\textrm{Normalized histogram of flow distribution}",
             bar_width = 0.67,
             lw = 0.0, markerstrokewidth = 0.7, markerstrokecolor = :black,
             c = [:deepskyblue :orange], #https://juliagraphics.github.io/Colors.jl/stable/namedcolors/
-            framestyle = :box, grid = true, xticks = 1:1:10)
-    Plots.savefig("flows_rand_min_Gav.pdf")
+            framestyle = :box, grid = true, xticks = 1:1:nbins-1)
+    Plots.savefig(filename)
+end
+
+function plot_histogram_all_runs(Data_loaded)
+    nbins = 11
+    random = weights_mean_err(Data_loaded, "P_inits", nbins)
+    minimized = weights_mean_err(Data_loaded, "P_finals", nbins)
+    filename = "flows_rand_min_Gav.pdf"
+    xlabelstr = L"\textrm{10 bins of width 0.10 from bin 1 = } [0.00,0.10) \textrm{ to bin 10 = } [0.90,1.00)"
+    ylabelstr = L"\textrm{Normalized probability}"
+    labelstr = [L"\textrm{Grids with low } G_{av}" L"\textrm{Random grids}"]
+    titlestr = L"\textrm{Normalized histogram of flow distribution}"
+    plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins,xlabelstr,ylabelstr,labelstr,titlestr)
+end
+
+""" Compares the flows of ALL configurations to those configurations with high_gc_low_Gav.
+"""
+function plot_histogram_high_gc_low_Gav(Data_loaded, Data_loaded__high_gc_low_Gav)
+    nbins = 21
+    random = weights_mean_err(Data_loaded, "P_inits", nbins)
+    minimized = weights_mean_err(Data_loaded__high_gc_low_Gav, "P_finals", nbins)
+    filename = "flows_rand_high_gc_low_Gav.pdf"
+    xlabelstr = L"\textrm{20 bins of width 0.05 from bin 1: } [0.00,0.05) \textrm{ to bin 20: } [0.95,1.00)"
+    ylabelstr = L"\textrm{Normalized probability}"
+    labelstr = [L"\textrm{Grids with high gc and low } G_{av}" L"\textrm{Random grids}"]
+    titlestr = L"\textrm{Distribution: Mean of 1000 random and 17 grids with high gc and low } G_{av}"
+    plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins,xlabelstr,ylabelstr,labelstr,titlestr)
 end
 
 # histograms
-function flow_single_sample(Data_loaded, i, Config) # i: sample number, j = 1: random, j = 4: optimized
+function flow_single_sample(Data_loaded, i, P_rand_opt) # i: sample number
     g = Data_loaded["Grid"]
-    P = Data_loaded[Config][i]
+    P = Data_loaded[P_rand_opt][i]
     F = flow(g, P)
     x = abs.(F)
 end

@@ -4,8 +4,8 @@ data. =#
 struct Locality
     loc_1step_init
     loc_1step_final
-    loc_1sept_0_init
-    loc_1sept_0_final
+    loc_1step_0_init
+    loc_1step_0_final
 end
 
 struct Nr_gen_con
@@ -31,12 +31,10 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
     k_max = Data_loaded["k_max"]
     N_runs = Data_loaded["N_runs"]
 
-    energy_init = []
-    energy_final = []
-    N_T_init = []
-    N_T_final = []
-    locality = []
-    #locality_0 = []
+    energy_init = []; energy_final = []
+    N_T_init = []; N_T_final = []
+    loc_1step_init = []; loc_1step_final = []
+    loc_1step_0_init = []; loc_1step_0_final = []
     gen_gen_init = []; con_con_init = []; gen_con_init = []
     gen_gen_final = []; con_con_final = []; gen_con_final = []
 
@@ -51,33 +49,33 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
         push!(N_T_init, flows_above_thres(T, P_inits[i], g))
         push!(N_T_final, flows_above_thres(T, P_finals[i], g))
 
-        # # locality
-        # locality_init_final = loc_1step(g, P_inits[i], C), loc_1step(g, P_finals[i], C)
-        # push!(locality, locality_init_final)
-        # locality_0_init_final = loc_1step_0(g, P_inits[i], C), loc_1step_0(g, P_finals[i], C)
-        # push!(locality_0, locality_0_init_final)
-
-
-        locality_single_run = Locality(loc_1step(g, P_inits[i], C),loc_1step(g, P_finals[i], C),loc_1step_0(g, P_inits[i], C),loc_1step_0(g, P_finals[i], C))
-        push!(locality, locality_single_run)
+        # locality
+        loc_1step_init_single_run = loc_1step(g, P_inits[i], C)
+        loc_1step_final_single_run = loc_1step(g, P_finals[i], C)
+        loc_1step_0_init_single_run = loc_1step_0(g, P_inits[i], C)
+        loc_1step_0_final_single_run = loc_1step_0(g, P_finals[i], C)
+        push!(loc_1step_init, loc_1step_init_single_run)
+        push!(loc_1step_final, loc_1step_final_single_run)
+        push!(loc_1step_0_init, loc_1step_0_init_single_run)
+        push!(loc_1step_0_final, loc_1step_0_final_single_run)
 
         # nr_gen_con
         gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
         push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
         gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
         push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
-
     end
+
     nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
     nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
+    locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
 
     JLD.save(filepath_out, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
         "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
         "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
-
-        #, "locality_0",locality_0)
 end
+
 
 ### results SA: calculating Gav_av and STD_Gav (averaged over all runs)
 function Gav_av_STD_Gav(Data_loaded)
@@ -263,35 +261,31 @@ function loc_1step_0(g_init, P, C) # only differing to loc_1step!() by counting 
     min_failure_distances, min_failure_distance_av
 end
 
-function locality(SData)
-    Data = SData["Data"]
-    N_side = SData["N_side"]
-    C = SData["C"]
-    N_runs = SData["N_runs"]
-    configs_init= collect_data(Data, 1)
-    configs_final = collect_data(Data, 4)
+function locality(Data_loaded)
+    C = Data_loaded["C"]
+    N_runs = Data_loaded["N_runs"]
     Data_init = [ ]
     Data_final = [ ]
     Data_init0 = [ ]
     Data_final0 = [ ]
-    N_runs = length(Data)
     for i in 1:N_runs
-        x = loc_1step!(configs_init[i], C, N_side)
+        x = Data_loaded["locality"].loc_1step_init[i][2]
         push!(Data_init, x)
-        y = loc_1step!(configs_final[i], C, N_side)
+        y = Data_loaded["locality"].loc_1step_final[i][2]
         push!(Data_final, y)
-        v = loc_1step_0!(configs_init[i], C, N_side)
+        v = Data_loaded["locality"].loc_1step_0_init[i][2]
         push!(Data_init0, v)
-        w = loc_1step_0!(configs_final[i], C, N_side)
+        w = Data_loaded["locality"].loc_1step_0_final[i][2]
         push!(Data_final0, w)
     end
-    locality_av = mean(collect_data(Data_final, 2) - collect_data(Data_init, 2))
-    locality_std = sqrt((1 / sqrt(N_runs) * std(collect_data(Data_final, 2)))^2 + (1 / sqrt(N_runs) * std(collect_data(Data_init, 2)))^2)
-    locality_av0 = mean(collect_data(Data_final0, 2) - collect_data(Data_init0, 2))
-    locality_std0 = sqrt((1 / sqrt(N_runs) * std(collect_data(Data_final0, 2)))^2 + (1 / sqrt(N_runs) * std(collect_data(Data_init0, 2)))^2)
+    # calculating difference between random and optimized configurations
+    locality_av_diff = mean(Data_final - Data_init)
+    locality_std_diff = sqrt((1 / sqrt(N_runs) * std(Data_final))^2 + (1 / sqrt(N_runs) * std(Data_init))^2)
+    locality_av0_diff = mean(Data_final0 - Data_init0)
+    locality_std0_diff = sqrt((1 / sqrt(N_runs) * std(Data_final0))^2 + (1 / sqrt(N_runs) * std(Data_init0))^2)
     #locality_std0 = 1 / sqrt(N_runs) * (std(collect_data(Data_final0, 2)) + std(collect_data(Data_init0, 2)))
-    A = locality_av, locality_std, Data_init, Data_final, mean(collect_data(Data_init, 2)), 1 / sqrt(N_runs) * std(collect_data(Data_init, 2)), mean(collect_data(Data_final, 2)), 1 / sqrt(N_runs) * std(collect_data(Data_final, 2))
-    B = locality_av0, locality_std0, Data_init0, Data_final0, mean(collect_data(Data_init0, 2)), 1 / sqrt(N_runs) * std(collect_data(Data_final0, 2)), mean(collect_data(Data_final0, 2)), 1 / sqrt(N_runs) * std(collect_data(Data_init0, 2))
+    A = locality_av_diff, locality_std_diff, Data_init, Data_final, mean(Data_init), 1 / sqrt(N_runs) * std(Data_init), mean(Data_final), 1 / sqrt(N_runs) * std(Data_final)
+    B = locality_av0_diff, locality_std0_diff, Data_init0, Data_final0, mean(Data_init0), 1 / sqrt(N_runs) * std(Data_final0), mean(Data_final0), 1 / sqrt(N_runs) * std(Data_init0)
     A, B
 end
 
