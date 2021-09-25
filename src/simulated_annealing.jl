@@ -171,6 +171,8 @@ function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::A
     P, en
 end
 
+using JLD
+
 function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     energies = []
     P_finals = []

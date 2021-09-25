@@ -1,5 +1,6 @@
 ### flow calculation
 using IterativeSolvers
+using LightGraphs
 
 # # N_vertices: number of vertices
 # # m: number of edges
