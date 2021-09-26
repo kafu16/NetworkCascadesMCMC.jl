@@ -4,7 +4,7 @@ module NetworkCascadesMCMC
 using LinearAlgebra
 
 # performance
-# sing CPUTime
+using CPUTime
 
 ############################ source files ######################################
 include("network_topologies.jl")
