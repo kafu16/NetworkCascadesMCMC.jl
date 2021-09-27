@@ -180,19 +180,29 @@ function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_i
     P_finals = []
     for i in 1:N_runs
         P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
-        #P, en = sim_anneal(g, P_init, C, annealing_schedule, steps_per_temp, k_max)
         push!(energies, en)
         push!(P_finals, P)
     end
     N_vertices = length(P_inits[1])
-    #N_vertices = length(P_init)
     JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
-    #JLD.save(filepath, "energies",energies, "P_init",P_init, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+end
+
+""" For parallel computing on high performance clusters.
+"""
+function parallel_multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+    energies = []
+    P_finals = []
+    @distributed vcat for i in 1:N_runs
+        P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
+        push!(energies, en)
+        push!(P_finals, P)
+    end
+    N_vertices = length(P_inits[1])
+    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
 
 ### several functions for SA
-
 function probability(ΔE::AbstractFloat, T::AbstractFloat) # probability function depends on ΔE and on temperature function
     exp( - ΔE / T) # Boltzmann's constant k_B is set to one
 end

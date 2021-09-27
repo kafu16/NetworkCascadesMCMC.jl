@@ -5,3 +5,4 @@
 *.jl.mem
 /docs/build/
 /data
+src/tryout.jl
