@@ -145,13 +145,16 @@ end
 function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
-    P = copy(P_init)
     en = [ ]
-    for k in 0:k_max - 1
+    energy_init = energy(g, P_init, C)[2] # by [2] only the second value of tuple is returned (G_av)
+    push!(en, energy_init)
+    P = copy(P_init)
+
+    for k in 1:k_max-1
         T = annealing_schedule(k,steps_per_temp) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
         P_old = copy(P) # for calculating the energy of "old" configuration
         P = stable_swapped_config!(g, P, C)
-        energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
+        energy_old = en[k]
         energy_new = energy(g, P, C)[2] # by [2] only the second value of tuple is returned (G_av)
         ΔE = energy_new - energy_old
         #### performance: let energy() calculate G_av only? Nope, G is only saving
@@ -159,13 +162,14 @@ function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::A
 
         if ΔE <= 0 # man könnte conditional auch umdrehen: if (ΔE <= 0 AND probability(ΔE, T) < rand())
                                                                  # P = P_old
-            P
+            push!(en, energy_new)
         elseif probability(ΔE, T) > rand() # rand() gives random number element of [0,1]
-            P
+            push!(en, energy_new)
         else
             P = P_old
+            push!(en, energy_old)
         end
-        push!(en, energy_old)
+
     end
     P, en
 end
@@ -244,3 +248,37 @@ end
 function temp_ex5(k::Integer, steps_per_temp::Integer)
     0.99 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
+
+
+################################################################################
+######################### DEPRECATED FUNCTIONS##################################
+################################################################################
+
+# # core function for simulated annealing
+# function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
+#     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
+#
+#     P = copy(P_init)
+#     en = [ ]
+#     for k in 0:k_max - 1
+#         T = annealing_schedule(k,steps_per_temp) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+#         P_old = copy(P) # for calculating the energy of "old" configuration
+#         P = stable_swapped_config!(g, P, C)
+#         energy_old = energy(g, P_old, C)[2] # by [2] only the second value of tuple is returned (G_av)
+#         energy_new = energy(g, P, C)[2] # by [2] only the second value of tuple is returned (G_av)
+#         ΔE = energy_new - energy_old
+#         #### performance: let energy() calculate G_av only? Nope, G is only saving
+#         # to an array and is helpful for understanding the algorithm.
+#
+#         if ΔE <= 0 # man könnte conditional auch umdrehen: if (ΔE <= 0 AND probability(ΔE, T) < rand())
+#                                                                  # P = P_old
+#             P
+#         elseif probability(ΔE, T) > rand() # rand() gives random number element of [0,1]
+#             P
+#         else
+#             P = P_old
+#         end
+#         push!(en, energy_old)
+#     end
+#     P, en
+# end
