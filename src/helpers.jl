@@ -256,6 +256,14 @@ end
 ################################## PLOTTING ####################################
 ################################################################################
 
+function generate_plots(Data_loaded, Data_loaded_high_gc_low_Gav, Run_Nr)
+    plot_Gav_av(Data_loaded)
+    plot_histogram_all_runs(Data_loaded)
+    Run_Nr = 1; plot_Gav_single_run(Data_loaded, Run_Nr)
+    plot_histogram_high_gc_low_Gav(Data_loaded, Data_loaded_high_gc_low_Gav)
+end
+
+
 function visualize_data(Data_loaded, P_rand_opt, Run_Nr) # for random grid: rand_opt=1 for optimized grid: rand_opt=4
     P = Data_loaded[P_rand_opt][Run_Nr]
     g = Data_loaded["Grid"]
