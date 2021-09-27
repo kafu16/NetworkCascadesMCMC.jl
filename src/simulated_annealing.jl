@@ -187,6 +187,7 @@ function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_i
     JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
+using Distributed
 """ For parallel computing on high performance clusters.
 """
 function parallel_multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
