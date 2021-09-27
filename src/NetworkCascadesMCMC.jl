@@ -22,7 +22,7 @@ locally in a script =#
 
 
 # core code simulated annealing
-export energy, sim_anneal, multiple_sim_anneal
+export energy, sim_anneal, multiple_sim_anneal, parallel_multiple_sim_anneal
 
 # postprocessing
 export postprocess_sim_anneal, postprocess_sim_anneal_high_gc_low_Gav
