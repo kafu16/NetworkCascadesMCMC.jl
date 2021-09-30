@@ -120,16 +120,16 @@ function stable_swapped_config!(g::LightGraphs.AbstractGraph, P::Array{Float64,1
     P = swap!(P)
     F = flow(g, P)
     #### ToDo: include max_iterations as variable parameter?
-    max_iterations = 10000 # hardcoded number of iteration after that loop is excited
-    global i = 1
+    # max_iterations = 10000 # hardcoded number of iteration after that loop is excited
+    # global i = 1
     while maximum(abs.(F)) > C
         P = swap!(P_stable_old)
         F = flow(g, P)
         #### ToDo
-        if i >= max_iterations
-            error("ERROR: Maximum number of iterations for finding stable configuration reached.")
-        end
-        global i += 1
+        # if i >= max_iterations
+        #     error("ERROR: Maximum number of iterations for finding stable configuration reached.")
+        # end
+        # global i += 1
     end
     P
 end

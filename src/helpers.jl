@@ -273,8 +273,7 @@ function plot_Gav_av(Data_loaded)
             xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
             ribbon=Data_av_e_std[2], fillalpha=.2,
             framestyle = :box, grid = true)
-    #Plots.savefig("decreasing_Gav_av.pdf")
-    Plots.savefig("decreasing_Gav_av")
+    Plots.savefig("decreasing_Gav_av.pdf")
 end
 
 """ Plots G_av for single run for each iteration step k.
@@ -286,8 +285,7 @@ function plot_Gav_single_run(Data_loaded, Run_Nr)
             xaxis = L"\textrm{Iteration step } k", yaxis = L"G_{av}",
             xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
             framestyle = :box, grid = true)
-    #Plots.savefig("decreasing_Gav_sample.pdf")
-    Plots.savefig("decreasing_Gav_sample")
+    Plots.savefig("decreasing_Gav_sample.pdf")
 end
 
 """ Calculates histogram for flows and calculates average and standard deviation
@@ -322,8 +320,7 @@ function plot_histogram_all_runs(Data_loaded)
     nbins = 11
     random = weights_mean_err(Data_loaded, "P_inits", nbins)
     minimized = weights_mean_err(Data_loaded, "P_finals", nbins)
-    # filename = "flows_rand_min_Gav.pdf"
-    filename = "flows_rand_min_Gav"
+    filename = "flows_rand_min_Gav.pdf"
     xlabelstr = L"\textrm{10 bins of width 0.10 from bin 1 = } [0.00,0.10) \textrm{ to bin 10 = } [0.90,1.00)"
     ylabelstr = L"\textrm{Normalized probability}"
     labelstr = [L"\textrm{Grids with low } G_{av}" L"\textrm{Random grids}"]
@@ -337,8 +334,7 @@ function plot_histogram_high_gc_low_Gav(Data_loaded, Data_loaded__high_gc_low_Ga
     nbins = 21
     random = weights_mean_err(Data_loaded, "P_inits", nbins)
     minimized = weights_mean_err(Data_loaded__high_gc_low_Gav, "P_finals", nbins)
-    # filename = "flows_rand_high_gc_low_Gav.pdf"
-    filename = "flows_rand_high_gc_low_Gav"
+    filename = "flows_rand_high_gc_low_Gav.pdf"
     xlabelstr = L"\textrm{20 bins of width 0.05 from bin 1: } [0.00,0.05) \textrm{ to bin 20: } [0.95,1.00)"
     ylabelstr = L"\textrm{Normalized probability}"
     labelstr = [L"\textrm{Grids with high gc and low } G_{av}" L"\textrm{Random grids}"]

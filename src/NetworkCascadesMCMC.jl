@@ -39,7 +39,7 @@ export visualize_graph, visualize_data
 export gen_square_grid
 export gen_stable_square_config, gen_multiple_stable_square_configs
 
-export temp_ex5
+export temp_ex1, temp_ex5
 
 # old
 export collect_data_SA_runs_var_ann_shed, collect_data_SA_runs
