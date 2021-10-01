@@ -13,11 +13,6 @@ include("visualization.jl")
 include("postprocessing.jl")
 
 ########################### export functions ###################################
-#### ToDo: export functions
-#= dont export funcs that aren't made for interactive use and are used only
-locally in a script =#
-
-
 # core code simulated annealing
 export energy, sim_anneal, multiple_sim_anneal, parallel_multiple_sim_anneal
 export flow, linefailure!, cascade!
@@ -62,6 +57,8 @@ end
 
 #= ToDo
  - [ ] define types for function arguments ([2021-08-20 Fr] done for simulated_annealing.jl)
+ - [ ] Performance: code linefailure!() with sparse matrix
+ - [ ] Performance: instead of calculating incidence matrix multiple time anew actualize entries of the matrix
  - [ ] if advantageous do package internal data management using DataFrames
  - [ ] visualization: heat map for flows
 =#

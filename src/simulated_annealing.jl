@@ -88,22 +88,11 @@ function swap!(P::Array{Float64,1}) # swaps randomly chosen generator-consumer p
     N_vertices = length(P)
     A = rand(1:N_vertices,1)
     B = rand(1:N_vertices,1)
-    # println("A initial", A) # following println-lines only to check what while-loop does, not necessary for swap()
-    # println("B initial", B)
     while A == B || P[A] == P[B]
-    # A == B avoids that entity is exchanged by itself, P[A] = P[B] avoids consumer-consumer and generator-generator-swap,
-    # while-loop is run if condition on either left or right hand side of || is fulfilled
-        # println("A while condition", A, "P[A] while condition", P[A])
-        # println("B while condition", B, "P[B] while condition", P[B])
-        A = rand(1:N_vertices,1) # if one writes "!" after function, behaviour of function changes see https://docs.julialang.org/en/v1/stdlib/Random/
-        B = rand(1:N_vertices,1) #### ToDo warum Fehlermeldung, wenn man A und B als global assigned?
-        # println("A in while", A)
-        # println("B in while", B)
+        A = rand(1:N_vertices,1)
+        B = rand(1:N_vertices,1)
     end
-    # println("A after while", A, "P[A] after while", P[A])
-    # println("B after while", B, "P[B] after while", P[B])
     P[A], P[B] = P[B], P[A] # swaps neighbors
-    # println(P)
     P
 end
 
@@ -216,13 +205,6 @@ end
 ################################################################################
 
 # arbitrary temperature function that decreases to zero and calculates temperature dependent of step
-function temperature(k::Integer)
-    0.99 ^ k
-    #0.999 ^ (floor(k/4))
-    #1. / (1 + 0.0001 * floor(k/4))
-end
-
-# arbitrary temperature function that decreases to zero and calculates temperature dependent of step
 function temp1(k::Integer, steps_per_temp::Integer)
     1. / (1 + 0.0001 * floor(k/steps_per_temp))
 end
@@ -239,28 +221,20 @@ function temp4(k::Integer, steps_per_temp::Integer)
     1. / (1 + 0.0025 * floor(k/steps_per_temp))
 end
 
-function temp5(k::Integer)
-    10. / (1 + 0.02 * k)
+function temp_ex1_a(k::Integer, steps_per_temp::Integer)
+    0.99 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex1(k::Integer, steps_per_temp::Integer)
-    0.999 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+function temp_ex1_b(k::Integer, steps_per_temp::Integer)
+    0.99 ^ (floor(k/steps_per_temp)) + 0.25 # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+end
+
+function temp_ex1_c(k::Integer, steps_per_temp::Integer)
+    0.99 ^ (floor(k/steps_per_temp)) + 0.5 # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
 function temp_ex2(k::Integer, steps_per_temp::Integer)
-    0.9995 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
-end
-
-function temp_ex3(k::Integer, steps_per_temp::Integer)
-    0.99975 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
-end
-
-function temp_ex4(k::Integer, steps_per_temp::Integer)
-    0.9999 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
-end
-
-function temp_ex5(k::Integer, steps_per_temp::Integer)
-    0.99 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+    0.999 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
 
