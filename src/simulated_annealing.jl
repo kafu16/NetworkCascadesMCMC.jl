@@ -2,6 +2,8 @@
 # grid operations (funtions that change/refer to  grid topology) used for SA ###
 ################################################################################
 
+using LightGraphs
+
 ### failure/removal of edge that causes cascade
 function linefailure!(g::LightGraphs.AbstractGraph, i::Integer) # edge i is removed
     B = Array(incidence_matrix(g, oriented=true))
@@ -119,7 +121,7 @@ function stable_swapped_config!(g::LightGraphs.AbstractGraph, P::Array{Float64,1
     # P_stable_old would equal P all the time, even when the value of P is changed
     P = swap!(P)
     F = flow(g, P)
-    #### ToDo: include max_iterations as variable parameter?
+    #### ToDo: implement without `global`.
     # max_iterations = 10000 # hardcoded number of iteration after that loop is excited
     # global i = 1
     while maximum(abs.(F)) > C

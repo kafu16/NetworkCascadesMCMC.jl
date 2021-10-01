@@ -1,14 +1,13 @@
 # net power injections P_i
 
-#### Building of an array whose entries represent nodes of square grid.
+using Random
+
+# Building of an array whose entries represent nodes of square grid.
 # Vertex one is entry one of array counting until the end of first line
 # of square grid, continuing to count in second line and so on.
-# Above built graph and array are (state: 25.09.2019) non-interdependent.
 
 #  initial configuration: flow network with random placements nodes having inflow = 1
 # or outflow = -1 representing consumers and generators
-
-using Random
 
 function gen_rand_config(N_side) # generates random configuration P (see below)
     N_vertices = N_side * N_side

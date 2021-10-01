@@ -1,6 +1,8 @@
 #= This file contains functions that calculate observerbles out of the "raw" simulation
 data. =#
 
+using LightGraphs
+
 struct Locality
     loc_1step_init
     loc_1step_final
@@ -72,6 +74,77 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
 
     JLD.save(filepath_out, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
         "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
+        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
+        "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
+end
+
+function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, gen_con, G_av_final)
+    Data_loaded = JLD.load(filepath_in)
+    energies = Data_loaded["energies"]
+    P_inits = Data_loaded["P_inits"]
+    P_finals = Data_loaded["P_finals"]
+    N_vertices = Data_loaded["N_vertices"]
+    g = Data_loaded["Grid"]
+    ann_sched = Data_loaded["annealing_schedule"]
+    steps_per_temp = Data_loaded["steps_per_temp"]
+    C = Data_loaded["C"]
+    k_max = Data_loaded["k_max"]
+    N_runs = Data_loaded["N_runs"]
+
+    energies_high_gc_low_Gav = []
+    P_inits_high_gc_low_Gav = []
+    P_finals_high_gc_low_Gav = []
+
+    energy_init = []; energy_final = []
+    N_T_init = []; N_T_final = []
+    loc_1step_init = []; loc_1step_final = []
+    loc_1step_0_init = []; loc_1step_0_final = []
+    gen_gen_init = []; con_con_init = []; gen_con_init = []
+    gen_gen_final = []; con_con_final = []; gen_con_final = []
+
+
+    for i in 1:N_runs
+        if nr_gen_con(g,P_finals[i])[3] > gen_con && energies[i][k_max] < G_av_final
+
+            push!(energies_high_gc_low_Gav, Data_loaded["energies"][i])
+            push!(P_inits_high_gc_low_Gav, Data_loaded["P_inits"][i])
+            push!(P_finals_high_gc_low_Gav, Data_loaded["P_finals"][i])
+
+            # calculating observables
+            # energy of initial and final configutations
+            push!(energy_init, energies[i][1])
+            push!(energy_final, energies[i][k_max])
+
+            # number of flows above a certain threshold for initial and final configutations
+            push!(N_T_init, flows_above_thres(T, P_inits[i], g))
+            push!(N_T_final, flows_above_thres(T, P_finals[i], g))
+
+            # locality
+            loc_1step_init_single_run = loc_1step(g, P_inits[i], C)
+            loc_1step_final_single_run = loc_1step(g, P_finals[i], C)
+            loc_1step_0_init_single_run = loc_1step_0(g, P_inits[i], C)
+            loc_1step_0_final_single_run = loc_1step_0(g, P_finals[i], C)
+            push!(loc_1step_init, loc_1step_init_single_run)
+            push!(loc_1step_final, loc_1step_final_single_run)
+            push!(loc_1step_0_init, loc_1step_0_init_single_run)
+            push!(loc_1step_0_final, loc_1step_0_final_single_run)
+
+            # nr_gen_con
+            gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
+            push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
+            gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
+            push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
+
+        end
+    end
+
+    N_runs_high_gc_low_Gav = length(energy_final)
+    nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
+    nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
+    locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
+
+    JLD.save(filepath_out, "energies",energies_high_gc_low_Gav, "P_inits",P_inits_high_gc_low_Gav, "P_finals",P_finals_high_gc_low_Gav, "N_vertices",N_vertices, "Grid",g,
+        "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs_high_gc_low_Gav,
         "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
 end
@@ -283,7 +356,7 @@ function locality(Data_loaded)
     locality_std_diff = sqrt((1 / sqrt(N_runs) * std(Data_final))^2 + (1 / sqrt(N_runs) * std(Data_init))^2)
     locality_av0_diff = mean(Data_final0 - Data_init0)
     locality_std0_diff = sqrt((1 / sqrt(N_runs) * std(Data_final0))^2 + (1 / sqrt(N_runs) * std(Data_init0))^2)
-    #locality_std0 = 1 / sqrt(N_runs) * (std(collect_data(Data_final0, 2)) + std(collect_data(Data_init0, 2)))
+
     A = locality_av_diff, locality_std_diff, Data_init, Data_final, mean(Data_init), 1 / sqrt(N_runs) * std(Data_init), mean(Data_final), 1 / sqrt(N_runs) * std(Data_final)
     B = locality_av0_diff, locality_std0_diff, Data_init0, Data_final0, mean(Data_init0), 1 / sqrt(N_runs) * std(Data_final0), mean(Data_final0), 1 / sqrt(N_runs) * std(Data_init0)
     A, B

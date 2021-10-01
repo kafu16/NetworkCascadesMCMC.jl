@@ -1,21 +1,6 @@
 #### building of square grid configuration
 using LightGraphs, GraphPlot
 
-# ### testing if code works with arbitrary graphs
-# function gen_square_grid(N_side) # N_side: this number sqared gives number of vertices, for N_side > 2
-#     N_vertices = N_side * N_side # N_vertices: number of vertices
-#     g=path_graph(N_vertices)
-#     LightGraphs.add_edge!(g, 1, 16)
-#     LightGraphs.add_edge!(g, 3, 6)
-#     LightGraphs.add_edge!(g, 8, 10)
-#     LightGraphs.add_edge!(g, 14, 11)
-#     LightGraphs.add_edge!(g, 2, 13)
-#     LightGraphs.add_edge!(g, 3, 7)
-#     LightGraphs.add_edge!(g, 9, 11)
-#     LightGraphs.add_edge!(g, 15, 12)
-#     g
-# end
-
 
 function gen_square_grid(N_side)
     N_vertices = N_side * N_side

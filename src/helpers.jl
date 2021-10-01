@@ -10,28 +10,8 @@ using Compose
 using Cairo
 using Fontconfig
 
-#safe data
+# safe data
 using JLD
-
-# data collection sqaure grids
-function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, steps_per_temp, k_max)
-    Data = []
-    for i in 1:N_runs
-        g = gen_square_grid(N_side)
-        P_init = gen_stable_square_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
-        P, en = sim_anneal(g, P_init, C, annealing_schedule, steps_per_temp, k_max)
-
-        # calculating observables
-        energy_initial = energy(g, P_init, C)
-        N_T = flows_above_thres(T, P_init, g), flows_above_thres(T, P, g)
-        locality_init = loc_1step(g, P_init, C), loc_1step_0(g, P_init, C)
-        locality_final = loc_1step(g, P, C), loc_1step_0(g, P, C)
-        energy_final = energy(g, P, C)
-        SA_extremal = P_init, energy_initial, nr_gen_con(g, P_init), P, energy_final, nr_gen_con(g, P), N_T, en, locality_init, locality_final
-        push!(Data, SA_extremal)
-    end
-    Data
-end
 
 """ Writes parameters of either the core-simulation-.jld-file  or the
     postprocess-.jld-file to a .txt-file.
@@ -98,26 +78,6 @@ function flows_above_thres(T, P, g) # gives number of flows above threshold T
     count(x -> x > T, abs.(F))
 end
 
-function collect_data(Data, col)
-    Data_x = [ ]
-    N_runs = length(Data)
-    for i in 1:N_runs
-        x = Data[i][col]
-        push!(Data_x, x)
-    end
-    Data_x
-end
-
-#### TODo is this function still used?
-function collect_data2(Data, col, subcol)
-    Data_x = [ ]
-    N_runs = length(Data)
-    for i in 1:N_runs
-        x = Data[i][col][subcol]
-        push!(Data_x, x)
-    end
-    Data_x
-end
 
 """ Calculates energy and standard deviation for every iteration step k averaged
     over N_runs.
@@ -143,113 +103,6 @@ function collect_av_e_std(Data_loaded)
         push!(Data_std, y)
     end
     Data_mean, Data_std
-end
-
-function collect_av_e_diff_std(Data)
-    Data_mean = [ ]
-    Data_std = [ ]
-    N_runs = length(Data[1][6])
-    for i in 2:N_runs
-        x = mean(collect_data2(Data, 6, i - 1)) - mean(collect_data2(Data, 6, i))
-        push!(Data_mean, x)
-        y = sqrt((1 / sqrt(N_runs) * std(collect_data2(Data, 6, i - 1); corrected=true))^2 + (1 / sqrt(N_runs) * std(collect_data2(Data, 6, i); corrected=true))^2)
-        push!(Data_std, y)
-    end
-    Data_mean, Data_std
-end
-
-function energy_from_data(Data, N_runs, C, N_side) # davor energy() abändern
-    edge_energy = [ ]
-    for i in 1:N_runs
-        g = gen_square_grid(N_side)
-        energy = energy(g, Data[i][3], C, N_side)
-        push!(edge_energy, energy[2])
-    end
-    #append!(Data, edge_energy)
-    #Data
-    edge_energy
-end
-
-function energy_from_data2(Data, N_runs, C, N_side)
-    g_av_energy = [ ]
-    for i in 1:N_runs
-        energy = Data[i][4][2]
-        push!(g_av_energy, energy)
-    end
-    #append!(Data, edge_energy)
-    #Data
-    g_av_energy
-end
-
-function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, gen_con, G_av_final)
-    Data_loaded = JLD.load(filepath_in)
-    energies = Data_loaded["energies"]
-    P_inits = Data_loaded["P_inits"]
-    P_finals = Data_loaded["P_finals"]
-    N_vertices = Data_loaded["N_vertices"]
-    g = Data_loaded["Grid"]
-    ann_sched = Data_loaded["annealing_schedule"]
-    steps_per_temp = Data_loaded["steps_per_temp"]
-    C = Data_loaded["C"]
-    k_max = Data_loaded["k_max"]
-    N_runs = Data_loaded["N_runs"]
-
-    energies_high_gc_low_Gav = []
-    P_inits_high_gc_low_Gav = []
-    P_finals_high_gc_low_Gav = []
-
-    energy_init = []; energy_final = []
-    N_T_init = []; N_T_final = []
-    loc_1step_init = []; loc_1step_final = []
-    loc_1step_0_init = []; loc_1step_0_final = []
-    gen_gen_init = []; con_con_init = []; gen_con_init = []
-    gen_gen_final = []; con_con_final = []; gen_con_final = []
-
-
-    for i in 1:N_runs
-        if nr_gen_con(g,P_finals[i])[3] > gen_con && energies[i][k_max] < G_av_final
-
-            push!(energies_high_gc_low_Gav, Data_loaded["energies"][i])
-            push!(P_inits_high_gc_low_Gav, Data_loaded["P_inits"][i])
-            push!(P_finals_high_gc_low_Gav, Data_loaded["P_finals"][i])
-
-            # calculating observables
-            # energy of initial and final configutations
-            push!(energy_init, energies[i][1])
-            push!(energy_final, energies[i][k_max])
-
-            # number of flows above a certain threshold for initial and final configutations
-            push!(N_T_init, flows_above_thres(T, P_inits[i], g))
-            push!(N_T_final, flows_above_thres(T, P_finals[i], g))
-
-            # locality
-            loc_1step_init_single_run = loc_1step(g, P_inits[i], C)
-            loc_1step_final_single_run = loc_1step(g, P_finals[i], C)
-            loc_1step_0_init_single_run = loc_1step_0(g, P_inits[i], C)
-            loc_1step_0_final_single_run = loc_1step_0(g, P_finals[i], C)
-            push!(loc_1step_init, loc_1step_init_single_run)
-            push!(loc_1step_final, loc_1step_final_single_run)
-            push!(loc_1step_0_init, loc_1step_0_init_single_run)
-            push!(loc_1step_0_final, loc_1step_0_final_single_run)
-
-            # nr_gen_con
-            gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
-            push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
-            gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
-            push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
-
-        end
-    end
-
-    N_runs_high_gc_low_Gav = length(energy_final)
-    nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
-    nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
-    locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
-
-    JLD.save(filepath_out, "energies",energies_high_gc_low_Gav, "P_inits",P_inits_high_gc_low_Gav, "P_finals",P_finals_high_gc_low_Gav, "N_vertices",N_vertices, "Grid",g,
-        "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs_high_gc_low_Gav,
-        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
-        "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
 end
 
 ################################################################################
@@ -350,53 +203,6 @@ function flow_single_sample(Data_loaded, i, P_rand_opt) # i: sample number
     x = abs.(F)
 end
 
-function flows_N_runs(SData, j) # i: sample number, j = 1: random grids, j = 4: optimised grids
-    N_side = SData["N_side"]
-    g = gen_square_grid(N_side)
-    Data = SData["Data"]
-    All_flows = [ ]
-    N_runs = length(Data)
-    P = Data[1][j]
-    F = flow(g, P)
-    All_flows = copy(F)
-    for i in 2:N_runs
-        P = Data[i][j]
-        F = flow(g, P)
-        append!(All_flows, F)
-    end
-    All_flows
-    x = abs.(All_flows)
-end
-
-function high_gc_low_Gav(SData, gen_con, G_av_final)
-    Data = SData["Data"]
-    N_runs = length(Data)
-    configs_high_gc_low_Gav = [ ]
-    for i in 1:N_runs
-        if Data[i][6][3] > gen_con && Data[i][5][2] < G_av_final # 23 is mean G_av plus STD
-            configs_high_gc_low_Gav = push!(configs_high_gc_low_Gav, Data[i])
-        end
-    end
-    configs_high_gc_low_Gav
-end
-
-function flows_high_gc_low_Gav(Data, N_side, j) # i: sample number, j = 1: random grids, j = 4: optimised grids
-    g = gen_square_grid(N_side)
-    All_flows = [ ]
-    N_runs = length(Data)
-    P = Data[1][j]
-    F = flow(g, P)
-    All_flows = copy(F)
-    for i in 2:N_runs
-        P = Data[i][j]
-        F = flow(g, P)
-        append!(All_flows, F)
-    end
-    All_flows
-    x = abs.(All_flows)
-end
-
-
 """ Calculates histogram for flows and calculates average and standard deviation
     for single bins, so the average and standard deviation over all first bins and
     separately for all second bins  etc. is calculated.
@@ -431,6 +237,27 @@ end
 ################################################################################
 ######################### DEPRECATED FUNCTIONS##################################
 ################################################################################
+
+# data collection sqaure grids
+function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, steps_per_temp, k_max)
+    Data = []
+    for i in 1:N_runs
+        g = gen_square_grid(N_side)
+        P_init = gen_stable_square_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
+        P, en = sim_anneal(g, P_init, C, annealing_schedule, steps_per_temp, k_max)
+
+        # calculating observables
+        energy_initial = energy(g, P_init, C)
+        N_T = flows_above_thres(T, P_init, g), flows_above_thres(T, P, g)
+        locality_init = loc_1step(g, P_init, C), loc_1step_0(g, P_init, C)
+        locality_final = loc_1step(g, P, C), loc_1step_0(g, P, C)
+        energy_final = energy(g, P, C)
+        SA_extremal = P_init, energy_initial, nr_gen_con(g, P_init), P, energy_final, nr_gen_con(g, P), N_T, en, locality_init, locality_final
+        push!(Data, SA_extremal)
+    end
+    Data
+end
+
 
 # # data collection
 # function collect_data_SA_runs_var_ann_shed(N_runs, N_side, C, T, annealing_schedule, k_max)
