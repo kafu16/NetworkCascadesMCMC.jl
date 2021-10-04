@@ -233,7 +233,7 @@ function temp_ex1_c(k::Integer, steps_per_temp::Integer)
     0.99 ^ (floor(k/steps_per_temp)) + 0.5 # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
-function temp_ex2(k::Integer, steps_per_temp::Integer)
+function temp_ex2_a(k::Integer, steps_per_temp::Integer)
     0.999 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
