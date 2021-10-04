@@ -19,7 +19,7 @@ export flow, linefailure!, cascade!
 
 # postprocessing
 export postprocess_sim_anneal, postprocess_sim_anneal_high_gc_low_Gav
-export write_out_params, write_out_postprocess
+export write_out_params, write_out_postprocess, write_out_energies
 export flows_above_thres, nr_gen_con, nr_gen_con_av, locality
 
 # plotting
