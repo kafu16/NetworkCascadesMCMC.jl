@@ -39,7 +39,7 @@ export gen_stable_square_config, gen_multiple_stable_square_configs
 export gen_stable_square_config, gen_multiple_stable_square_configs
 
 # annealing schedules
-export temp_ex1_a, temp_ex1_b, temp_ex1_c, temp_ex2_a
+export temp_ex1_a, temp_ex1_b, temp_ex1_c, temp_ex2_a, temp_ex3_a, temp_ex3_b, temp_ex4_a, temp_ex5_a
 
 # old functions
 export collect_data_SA_runs
