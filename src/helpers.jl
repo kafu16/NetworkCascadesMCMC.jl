@@ -72,6 +72,20 @@ function write_out_postprocess(Data_loaded, filename)
     end
 end
 
+function write_out_energies(Data_loaded, filename)
+    N_runs = Data_loaded["N_runs"]
+    open(filename, "a") do io
+        write(io, "\n\nFinal energies\n")
+    end
+    final_energies = Data_loaded["energy_final"]
+    for i in 1:N_runs
+        open(filename, "a") do io
+            write(io, "\n")
+            write(io, string(final_energies[i]))
+        end
+    end
+end
+
 
 function flows_above_thres(T, P, g) # gives number of flows above threshold T
     F = flow(g, P)

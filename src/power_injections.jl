@@ -2,6 +2,7 @@
 
 using Random
 
+################################ square grids ##################################
 # Building of an array whose entries represent nodes of square grid.
 # Vertex one is entry one of array counting until the end of first line
 # of square grid, continuing to count in second line and so on.
