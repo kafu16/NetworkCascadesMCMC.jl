@@ -282,7 +282,7 @@ function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, steps_pe
     Data = []
     for i in 1:N_runs
         g = gen_square_grid(N_side)
-        P_init = gen_stable_square_config(g, N_side, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
+        P_init = gen_stable_config(g, C) # to avoid iteration steps it is important to start with a stable configurations see comment at stable_swapped_config!()
         P, en = sim_anneal(g, P_init, C, annealing_schedule, steps_per_temp, k_max)
 
         # calculating observables

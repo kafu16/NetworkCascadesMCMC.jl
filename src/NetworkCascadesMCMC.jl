@@ -32,8 +32,8 @@ export plot_Gav_av, plot_Gav_single_run, plot_histogram_random_vs_minimized_G_av
 plot_histogram_all_runs, plot_histogram_high_gc_low_Gav
 
 # square grids
-export gen_square_grid, gen_periodic_square_grid
-export gen_stable_square_config, gen_multiple_stable_square_configs
+export gen_square_grid, gen_periodic_square_grid, gen_rand_grid
+export gen_stable_config, gen_multiple_stable_configs
 
 # power injections
 export gen_stable_square_config, gen_multiple_stable_square_configs

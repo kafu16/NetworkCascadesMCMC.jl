@@ -1,5 +1,6 @@
 #### building of square grid configuration
 using LightGraphs, GraphPlot
+using SyntheticNetworks
 
 
 function gen_square_grid(N_side)
@@ -44,6 +45,18 @@ function gen_periodic_square_grid(N_side)
         LightGraphs.add_edge!(g, i, N_vertices - N_side + i)
     end
     g
+end
+
+""" generates power grid using SyntheticNetworks.jl and converts this generated
+    grind into a SimpleGraph.
+"""
+function gen_rand_grid(rpg_seed, n, n0, p, q, r, s)
+    Random.seed!(rpg_seed)
+    u = 1 # parameter not implemented in SyntheticNetworks
+    rpg = RandomPowerGrid(n, n0, p, q, r, s, u)
+    generated_graph = generate_graph(rpg)
+    A = LightGraphs.adjacency_matrix(generated_graph)
+    g= LightGraphs.SimpleGraph(A)
 end
 
 # ### generation of non-embedded square grid (deprecated function)
