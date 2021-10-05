@@ -10,8 +10,10 @@ using Compose
 using Cairo
 using Fontconfig
 
-# safe data
+# data management
 using JLD
+using DataFrames
+using CSV
 
 """ Writes parameters of either the core-simulation-.jld-file  or the
     postprocess-.jld-file to a .txt-file.
@@ -72,18 +74,41 @@ function write_out_postprocess(Data_loaded, filename)
     end
 end
 
-function write_out_energies(Data_loaded, filename)
-    N_runs = Data_loaded["N_runs"]
-    open(filename, "a") do io
-        write(io, "\n\nFinal energies\n")
-    end
-    final_energies = Data_loaded["energy_final"]
-    for i in 1:N_runs
-        open(filename, "a") do io
-            write(io, "\n")
-            write(io, string(final_energies[i]))
-        end
-    end
+""" creates DataFrame from source postprocess data.
+"""
+function df_postprocessing(Data_loaded)
+    energy_init = Data_loaded["energy_init"]
+    energy_final = Data_loaded["energy_final"]
+
+    loc_1step_init = last.(Data_loaded["locality"].loc_1step_init)
+    loc_1step_final = last.(Data_loaded["locality"].loc_1step_final)
+    loc_1step_0_init = last.(Data_loaded["locality"].loc_1step_0_init)
+    loc_1step_0_final = last.(Data_loaded["locality"].loc_1step_0_final)
+
+    gen_gen_init = Data_loaded["nr_gen_con_init"].gen_gen
+    con_con_init = Data_loaded["nr_gen_con_init"].con_con
+    gen_con_init = Data_loaded["nr_gen_con_init"].gen_con
+    gen_gen_final = Data_loaded["nr_gen_con_final"].gen_gen
+    con_con_final = Data_loaded["nr_gen_con_final"].con_con
+    gen_con_final = Data_loaded["nr_gen_con_final"].gen_con
+
+    N_T_init = Data_loaded["N_T_init"]
+    N_T_final = Data_loaded["N_T_final"]
+
+    N_vertices = Data_loaded["N_vertices"]
+    C = Data_loaded["C"]
+    grid = Data_loaded["Grid"]
+    annealing_schedule = Data_loaded["annealing_schedule"]
+    steps_per_temp = Data_loaded["steps_per_temp"]
+    k_max = Data_loaded["k_max"]
+
+    df = DataFrame("energy_init" => energy_init, "energy_final" => energy_final,
+        "loc_1step_init" => loc_1step_init, "loc_1step_final" => loc_1step_final, "loc_1step_0_init" => loc_1step_0_init, "loc_1step_0_final" => loc_1step_0_final,
+        "gen_gen_init" => gen_gen_init, "con_con_init" => con_con_init, "gen_con_init" => gen_con_init,
+        "gen_gen_final" => gen_gen_final, "con_con_final" => con_con_final, "gen_con_final" => gen_con_final,
+        "N_T_init" => N_T_init, "N_T_final" => N_T_final,
+        "N_vertices" => N_vertices, "C" => con_con_final, "Grid" => grid,
+        "annealing_schedule" => annealing_schedule, "steps_per_temp" => steps_per_temp, "k_max" => k_max)
 end
 
 
@@ -271,6 +296,20 @@ function collect_data_SA_runs(N_runs, N_side, C, T, annealing_schedule, steps_pe
     end
     Data
 end
+
+# function write_out_energies(Data_loaded, filename)
+#     N_runs = Data_loaded["N_runs"]
+#     open(filename, "a") do io
+#         write(io, "\n\nFinal energies\n")
+#     end
+#     final_energies = Data_loaded["energy_final"]
+#     for i in 1:N_runs
+#         open(filename, "a") do io
+#             write(io, "\n")
+#             write(io, string(final_energies[i]))
+#         end
+#     end
+# end
 
 
 # # data collection
