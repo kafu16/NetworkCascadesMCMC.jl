@@ -245,6 +245,10 @@ function temp_ex3_b(k::Integer, steps_per_temp::Integer)
     2. * 0.99 ^ (floor(k/steps_per_temp)) + 0.25 # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
 
+function temp_ex3_c(k::Integer, steps_per_temp::Integer)
+    2. * 0.99 ^ (floor(k/steps_per_temp)) + 0.4 # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+end
+
 function temp_ex4_a(k::Integer, steps_per_temp::Integer)
     5. * 0.99 ^ (floor(k/steps_per_temp)) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
 end
