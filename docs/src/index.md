@@ -1,11 +1,6 @@
-```@meta
-CurrentModule = NetworkCascadesMCMC
-```
-
-# NetworkCascadesMCMC
-
-```@index
-```
+## Installation
+ - Install NetworkCascadesMCMC.jl: `pkg> add https://github.com/kafu16/NetworkCascadesMCMC.jl.git`
+ - Get recent version of NetworkCascadesMCMC.jl: `pkg> update NetworkCascadesMCMC`
 
 ## Example Usage
 This is a simple example script
@@ -29,8 +24,4 @@ elapsed_time(A, B)
 # core simulation
 print("\ncore simulation: ")
 A = Dates.now()
-```
-
-```@autodocs
-Modules = [NetworkCascadesMCMC]
 ```
