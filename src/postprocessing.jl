@@ -72,7 +72,7 @@ function postprocess_sim_anneal(filepath_in, filepath_out, T)
     nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
     locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
 
-    JLD.save(filepath_out, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
+    JLD.save(filepath_out, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
         "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
         "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
