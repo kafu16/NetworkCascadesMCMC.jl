@@ -7,6 +7,8 @@ CurrentModule = NetworkCascadesMCMC
 ```@index
 ```
 
+ - Bla bla
+
 ```@autodocs
 Modules = [NetworkCascadesMCMC]
 ```
