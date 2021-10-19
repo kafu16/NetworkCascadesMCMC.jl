@@ -48,40 +48,40 @@ end
 ################################################################################
 using Statistics
 
-# function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
-#     g = copy(g_init)
-#     B = Array(incidence_matrix(g, oriented=true))
-#     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
-#     linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numbered in an array
-#     linefailure_indizes = shuffle!(linefailure_indizes) # positions of edges in linefailure_indizes is randomly permuted by shuffle!()
-#     # randomness is redundant unless m in following for-loop is replaced by a number smaller than m
-#
-#     # # N_removals (optional argument): number of edge removals for approximation
-#     # # (not implemented)
-#     # if N_removals > 0
-#     #     N = N_removals
-#     # else
-#     #     N = m
-#     # end
-#     # # Für Näherung, d.h. man zieht nur N edges anstatt alle, muss man das nachfolgenden m durch N ersetzen
-#
-#     G = [ ]
-#     for i in 1:m # for loop for randomly chosen N_vertices linefailures
-#         g = linefailure!(g, linefailure_indizes[i])
-#         g = cascade!(g, P, C)
-#
-#         G = append!(G, biggest_component(g))
-#         g = copy(g_init)
-#     end
-#
-#     G_av = mean(G)
-#     G, G_av # this way two values in a tuple are returned by a function
-# end
-
 function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
-    G = 0
-    G, convert(Float64,nr_gen_con(g_init, P)[3]) # this way two values in a tuple are returned by a function
+    g = copy(g_init)
+    B = Array(incidence_matrix(g, oriented=true))
+    m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
+    linefailure_indizes = collect(1:m) # collect() collects all values in the range 1:m in an array, here all edges are numbered in an array
+    linefailure_indizes = shuffle!(linefailure_indizes) # positions of edges in linefailure_indizes is randomly permuted by shuffle!()
+    # randomness is redundant unless m in following for-loop is replaced by a number smaller than m
+
+    # # N_removals (optional argument): number of edge removals for approximation
+    # # (not implemented)
+    # if N_removals > 0
+    #     N = N_removals
+    # else
+    #     N = m
+    # end
+    # # Für Näherung, d.h. man zieht nur N edges anstatt alle, muss man das nachfolgenden m durch N ersetzen
+
+    G = [ ]
+    for i in 1:m # for loop for randomly chosen N_vertices linefailures
+        g = linefailure!(g, linefailure_indizes[i])
+        g = cascade!(g, P, C)
+
+        G = append!(G, biggest_component(g))
+        g = copy(g_init)
+    end
+
+    G_av = mean(G)
+    G, G_av # this way two values in a tuple are returned by a function
 end
+
+# function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
+#     G = 0
+#     G, convert(Float64,nr_gen_con(g_init, P)[3]) # this way two values in a tuple are returned by a function
+# end
 
 ################################################################################
 ########################## Monte Carlo step functions ##########################
