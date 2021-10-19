@@ -20,8 +20,7 @@ end
     each iteration step of simulated annealing and executes multiple postprocessing
     functions. The resulting postprocessing data is saved as another .jl-file.
 """
-function postprocess_sim_anneal(filepath_in, filepath_out, T)
-    Data_loaded = JLD.load(filepath_in)
+function postprocess_sim_anneal(Data_loaded, filepath_out, T)
     energies = Data_loaded["energies"]
     P_inits = Data_loaded["P_inits"]
     P_finals = Data_loaded["P_finals"]
