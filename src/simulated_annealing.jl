@@ -80,7 +80,7 @@ using Statistics
 
 function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
     G = 0
-    G, convert(Float64,nr_gen_con(g, P)[3]) # this way two values in a tuple are returned by a function
+    G, convert(Float64,nr_gen_con(g_init, P)[3]) # this way two values in a tuple are returned by a function
 end
 
 ################################################################################
