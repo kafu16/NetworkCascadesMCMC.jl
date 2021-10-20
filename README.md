@@ -83,18 +83,19 @@ multiple_sim_anneal(simulation_data, g, P_inits, C, annealing_schedule, annealin
 
 # postprocessing
 postprocess_data = string(directory,"/postprocess_data.jld")
-postprocess_sim_anneal(simulation_data, postprocess_data, T)
-Data_loaded = JLD.load(postprocess_data)
+Data_sim = JLD.load(simulation_data)
+postprocess_sim_anneal(Data_sim, postprocess_data, T)
+Data_post = JLD.load(postprocess_data)
 filename = "params_postprocess.txt"
-write_out_params(Data_loaded, filename)
-write_out_postprocess(Data_loaded, filename)
-df = df_postprocessing(Data_loaded)
+write_out_params(Data_post, filename)
+write_out_postprocess(Data_post, filename)
+df = df_postprocessing(Data_post)
 CSV.write(string(directory,"/data_postprocess.csv"), df)
 
 # plotting
-plot_Gav_av(Data_loaded)
-plot_histogram_all_runs(Data_loaded)
-Run_Nr = 1; plot_Gav_single_run(Data_loaded, Run_Nr)
+plot_Gav_av(Data_sim)
+plot_histogram_all_runs(Data_post)
+Run_Nr = 1; plot_Gav_single_run(Data_sim, Run_Nr)
 
 cd(repo_directory)
 ```
