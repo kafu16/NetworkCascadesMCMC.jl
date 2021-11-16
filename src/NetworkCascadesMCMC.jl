@@ -58,7 +58,7 @@ end
 #= ToDo
  - [ ] define types for function arguments ([2021-08-20 Fr] done for simulated_annealing.jl)
  - [ ] Performance: code linefailure!() with sparse matrix
- - [ ] Performance: instead of calculating incidence matrix multiple time anew actualize entries of the matrix
+ - [ ] Performance: instead of calculating incidence matrix multiple times anew actualize entries of the matrix
  - [ ] if advantageous do package internal data management using DataFrames
  - [ ] visualization: heat map for flows
 =#

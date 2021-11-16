@@ -107,7 +107,7 @@ function df_postprocessing(Data_loaded)
         "gen_gen_init" => gen_gen_init, "con_con_init" => con_con_init, "gen_con_init" => gen_con_init,
         "gen_gen_final" => gen_gen_final, "con_con_final" => con_con_final, "gen_con_final" => gen_con_final,
         "N_T_init" => N_T_init, "N_T_final" => N_T_final,
-        "N_vertices" => N_vertices, "C" => con_con_final, "Grid" => grid,
+        "N_vertices" => N_vertices, "C" => C, "Grid" => grid,
         "annealing_schedule" => annealing_schedule, "steps_per_temp" => steps_per_temp, "k_max" => k_max)
 end
 
