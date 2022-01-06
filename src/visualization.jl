@@ -5,6 +5,14 @@ using GraphMakie
 using CairoMakie.Colors
 #### visualisation of square grid
 
+### flow direction, definition of P_i:
+### (plotted SimpleDiGraph: all horizontal lines point to the right, all vertical line point downwards)
+# new: (compared to the old plotting flipped 180 degrees around the x-axis)
+# if F_e < 0, flow rightwards or downwards (flow is in the same direction as arrow)
+# if F_e > 0, flow leftwards or upwards (flow is in the opposite direction as arrow)
+# P_i = 1 one unit of flow is generated
+# P_i = -1 one unit of flow is consumed
+
 ### embed square grid
 function set_vertex_locs(P) # sets vertex locations, example usage: gplot(g, locs_x, locs_y) while locs_x, locs_y = set_vertex_locs()
     N_vertices = length(P)
@@ -41,9 +49,9 @@ end
 ### colour P_i
 using Colors
 
-# choice of colours: https://juliagraphics.github.io/Colors.jl/stable/namedcolors/
+# choice of colors: https://juliagraphics.github.io/Colors.jl/stable/namedcolors/
 function set_vertex_colors(P)
-    nodefillc = [] # generates empty vector of type 'Any'
+    nodefillc = RGB[] # initializing type
     for value in P
         if value == 1
             push!(nodefillc, colorant"grey85") # push! inserts items at end of collection # in TeX grey 95
@@ -55,7 +63,7 @@ function set_vertex_colors(P)
 end
 
 function set_vertex_colors2(P)
-    nodefillc = [] # generates empty vector of type 'Any'
+    nodefillc = RGB[]
     for value in P
         if value == 1
             push!(nodefillc, colorant"grey95") # push! inserts items at end of collection # in TeX grey 95
@@ -67,7 +75,7 @@ function set_vertex_colors2(P)
 end
 
 function set_edge_colors(F::Array{Float64,1})
-    edgefillc = RGB[] # initializing type
+    edgefillc = RGB[]
 
     for value in F
         # push!(edgefillc, cgrad(:blues, Int(ceil(maximum(F)*100)), categorical = true)[Int(ceil((value*100)))]) #, rev=true
@@ -76,6 +84,47 @@ function set_edge_colors(F::Array{Float64,1})
     end
     edgefillc
 end
+
+function set_gencon_colors(g,P)
+    # loop over all edges
+    edgefillc = RGB[]
+    for i in 1:ne(g)
+        if P[findfirst(isodd, B[:, i])] == P[findlast(isodd, B[:, i])]
+            push!(edgefillc, colorant"grey85")
+
+        else
+            push!(edgefillc, colorant"black")
+        end
+    end
+    edgefillc
+end
+
+function flows_colormap(g, P)
+    F = flow(g, P)
+    F_abs = abs.(F)
+    locs_x, locs_y = set_vertex_locs(P)
+    lay = X -> Point.(zip(locs_x,locs_y))
+
+    # set edge colors
+    edgecolors = set_edge_colors(F_abs)
+    # set vertex colors
+    vertex_colors = set_vertex_colors(P)
+
+    fig = Figure() # creats Figure Object
+
+    # determines position in figure
+    ax1 = Axis(fig[1, 1], title ="Network", xgridvisible=false, ygridvisible=false)
+
+    graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15, node_color=vertex_colors, edge_color=edgecolors)
+
+    cbar = Colorbar(fig[1, 2], limits=(0,1), colormap = cgrad(:blues, 100),
+    flipaxis = false, vertical = true,
+    label = "flow units")
+    cbar.ticks = 0:0.1:1
+
+    fig
+end
+
 
 function compare_flows_colormap(g, P1, P2)
     F1 = flow(g, P1)
@@ -129,14 +178,15 @@ function compare_flows_colormap(g, P1, P2)
     fig
 end
 
-function flows_colormap(g, P)
+
+function visualize_gencon(g, P)
     F = flow(g, P)
     F_abs = abs.(F)
     locs_x, locs_y = set_vertex_locs(P)
     lay = X -> Point.(zip(locs_x,locs_y))
 
     # set edge colors
-    edgecolors = set_edge_colors(F_abs)
+    edgecolors = set_gencon_colors(g,P)
     # set vertex colors
     vertex_colors = set_vertex_colors(P)
 
@@ -145,15 +195,13 @@ function flows_colormap(g, P)
     # determines position in figure
     ax1 = Axis(fig[1, 1], title ="Network", xgridvisible=false, ygridvisible=false)
 
+    # graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15.0, node_color=vertex_colors, edge_color=edgecolors, elabels=string.(F), elabels_textsize=12)
     graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15, node_color=vertex_colors, edge_color=edgecolors)
-
-    cbar = Colorbar(fig[1, 2], limits=(0,1), colormap = cgrad(:blues, 100),
-    flipaxis = false, vertical = true,
-    label = "flow units")
-    cbar.ticks = 0:0.1:1
 
     fig
 end
+
+
 
 
 ################################################################################
@@ -164,6 +212,15 @@ end
 #  - Do not load Graphs (do not execute `using Graphs`)
 #  - load LightGraphs (using LightGraphs)
 #  - load GraphPlot (using GraphPlot)
+#  - load Colors (using Colors)
+#
+# old:
+# ### flow direction, definition of P_i:
+# ### (plotted SimpleDiGraph: all horizontal lines point to the right, all vertical line point downwards)
+# # if F_e < 0, flow rightwards or downwards (flow is in the same direction as arrow)
+# # if F_e > 0, flow leftwards or upwards (flow is in the opposite direction as arrow)
+# # P_i = 1 one unit of flow is generated
+# # P_i = -1 one unit of flow is consumed
 #
 # using GraphPlot
 # ### show P_i in Graph
@@ -179,7 +236,7 @@ end
 # function visualize_graph(g, P)
 #     F = flow(g, P)
 #     locs_x, locs_y = set_vertex_locs(P)
-#     nodefillc = set_colours(P)
+#     nodefillc = set_vertex_colors(P)
 #
 #     gplot(g, locs_x, locs_y, nodefillc = nodefillc, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
 #     #gplot(g, locs_x, locs_y, nodelabel = P, nodefillc = nodefillc, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
@@ -196,13 +253,6 @@ end
 #     #gplot(g, locs_x, locs_y, nodefillc = nodefillc)
 # end
 #
-# ### flow direction, definition of P_i:
-# ### (plotted SimpleDiGraph: all horizontal lines point to the right, all vertical line point downwards)
-# # if F_e < 0, flow rightwards or downwards (flow is in the same direction as arrow)
-# # if F_e > 0, flow leftwards or upwards (flow is in the opposite direction as arrow)
-# # P_i = 1 one unit of flow is generated
-# # P_i = -1 one unit of flow is consumed
-#
 # ### visualize graph after line failure induced cascade
 # # for evaluation of visualize_graph_after_linefailure_cascade: it must be line ⋜ m:
 # #B = Array(incidence_matrix(g, oriented=true))
@@ -212,3 +262,12 @@ end
 #     g = cascade!(g, P, C)
 #     visualize_graph(g, P)
 # end
+#
+# # save to pdf
+# using Compose
+# using Cairo
+# draw(PDF("bla.pdf", 16cm, 16cm), gplot(g))
+# # save to png
+# draw(PNG("bla.png", 16cm, 16cm), gplot(g))
+# # save to svg
+# draw(SVG("bla.svg", 16cm, 16cm), gplot(g))
