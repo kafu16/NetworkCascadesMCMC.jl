@@ -2,10 +2,10 @@
 # grid operations (funtions that change/refer to  grid topology) used for SA ###
 ################################################################################
 
-using LightGraphs
+# using LightGraphs
 
 ### failure/removal of edge that causes cascade
-function linefailure!(g::LightGraphs.AbstractGraph, i::Integer) # edge i is removed
+function linefailure!(g::AbstractGraph, i::Integer) # edge i is removed
     B = Array(incidence_matrix(g, oriented=true))
     rem_edge!(g, findfirst(isodd, B[:, i]), findlast(isodd, B[:, i]))
     g
@@ -13,7 +13,7 @@ end
 
 
 ### cascade
-function cascade!(g::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # removes all edges whose flow is bigger than C -> calculates flow again and so on until all flows are smaller than C
+function cascade!(g::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # removes all edges whose flow is bigger than C -> calculates flow again and so on until all flows are smaller than C
     F = flow(g, P)
     while maximum(abs.(F)) > C
 
@@ -36,8 +36,8 @@ end
 
 
 ### measurements of energy() (see below)
-function biggest_component(g::LightGraphs.AbstractGraph) # gives biggest connected component of graph g
-    maximum(length.(LightGraphs.connected_components(g))) # connected_components() returns vector whose components contain connected vertices
+function biggest_component(g::AbstractGraph) # gives biggest connected component of graph g
+    maximum(length.(connected_components(g))) # connected_components() returns vector whose components contain connected vertices
     # so the length of a component is the size of a connected graph
     # so here the biggest connected graph out of all vertices is chosen
 end
@@ -48,7 +48,7 @@ end
 ################################################################################
 using Statistics
 
-function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
+function energy(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
     g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
@@ -102,7 +102,7 @@ end
 
 
 # generation of stable swapped configuration
-function stable_swapped_config!(g::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat)
+function stable_swapped_config!(g::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat)
 # to avoid calculation steps, the input configuration should be stable as the stable_swapped_config() only permutes
 # one generator-consumer pair. so having an unstable configuration as input will probably take more steps than
 # first generating a stable configuration by gen_stable__square_config() and then apply stable_swapped_config()
@@ -137,7 +137,7 @@ end
 ### key code of SA
 
 # core function for simulated annealing
-function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
+function sim_anneal(g::AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
     en = [ ]
@@ -170,7 +170,7 @@ function sim_anneal(g::LightGraphs.AbstractGraph, P_init::Array{Float64,1}, C::A
 end
 
 
-function multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function multiple_sim_anneal(filepath::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     energies = []
     P_finals = []
     for i in 1:N_runs
@@ -185,7 +185,7 @@ end
 using Distributed
 """ For parallel computing on high performance clusters.
 """
-function parallel_multiple_sim_anneal(filepath::String, g::LightGraphs.AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function parallel_multiple_sim_anneal(filepath::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     Data = @distributed vcat for i in 1:N_runs
         sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
         #P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)

@@ -1,24 +1,24 @@
 #### building of square grid configuration
-using LightGraphs, GraphPlot
+# using LightGraphs
 using SyntheticNetworks
 
 
 function gen_square_grid(N_side)
     N_vertices = N_side * N_side
 
-    g = LightGraphs.SimpleGraph(N_vertices) # generates undirected graph
+    g = SimpleGraph(N_vertices) # generates undirected graph
 
     # loop one: going through each row of square grid connecting each vertex with the vertex of its right
     for i in 1:N_side:N_vertices - N_side + 1
         for i in i:i + N_side - 2
-            LightGraphs.add_edge!(g, i, i+1)
+            add_edge!(g, i, i+1)
         end
     end
 
     # loop two: going through each column of square grid connecting each vertex with the vertex under it
     for i in 1:N_side
         for i in i:N_side:N_vertices - (2 * N_side) + i
-            LightGraphs.add_edge!(g, i, i + N_side)
+            add_edge!(g, i, i + N_side)
         end
     end
     g
@@ -27,22 +27,22 @@ end
 function gen_periodic_square_grid(N_side)
     N_vertices = N_side * N_side
 
-    g = LightGraphs.SimpleGraph(N_vertices) # generates undirected graph
+    g = SimpleGraph(N_vertices) # generates undirected graph
 
     # loop one: going through each row of square grid connecting each vertex with the vertex of its right
     for i in 1:N_side:N_vertices - N_side + 1
         for i in i:i + N_side - 2
-            LightGraphs.add_edge!(g, i, i+1)
+            add_edge!(g, i, i+1)
         end
-        LightGraphs.add_edge!(g, i, i + N_side - 1)
+        add_edge!(g, i, i + N_side - 1)
     end
 
     # loop two: going through each column of square grid connecting each vertex with the vertex under it
     for i in 1:N_side
         for i in i:N_side:N_vertices - (2 * N_side) + i
-            LightGraphs.add_edge!(g, i, i + N_side)
+            add_edge!(g, i, i + N_side)
         end
-        LightGraphs.add_edge!(g, i, N_vertices - N_side + i)
+        add_edge!(g, i, N_vertices - N_side + i)
     end
     g
 end
@@ -55,8 +55,8 @@ function gen_rand_grid(rpg_seed, n, n0, p, q, r, s)
     u = 1 # parameter not implemented in SyntheticNetworks
     rpg = RandomPowerGrid(n, n0, p, q, r, s, u)
     generated_graph = generate_graph(rpg)
-    A = LightGraphs.adjacency_matrix(generated_graph)
-    g= LightGraphs.SimpleGraph(A)
+    A = adjacency_matrix(generated_graph)
+    g= SimpleGraph(A)
 end
 
 # ### generation of non-embedded square grid (deprecated function)

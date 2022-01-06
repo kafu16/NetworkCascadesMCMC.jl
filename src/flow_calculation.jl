@@ -1,6 +1,6 @@
 ### flow calculation
 using IterativeSolvers
-using LightGraphs
+# using LightGraphs
 
 
 # N_vertices: number of vertices
@@ -15,6 +15,8 @@ function flow(g, P) # calculates the flow of graph g for a certain configuration
     F = lsqr(B, P) # solving BF = P for F by returning minimal norm solution: https://juliamath.github.io/IterativeSolvers.jl/dev/linear_systems/lsqr/
     F_rounded = round.(F; digits = 2)
 end
+
+# F = lsqr(B, P, atol=1e-3, btol=1e-3)
 
 # function flow(g, P) # calculates the flow of graph g for a certain configuration P
 #     L = Array(LightGraphs.laplacian_matrix(g)) # N_vertices x N_vertices Laplacian Matrix L
