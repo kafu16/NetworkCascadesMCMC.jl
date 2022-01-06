@@ -2,7 +2,8 @@
 NetworkCascadesMCMC including plotting functions=#
 
 using Plots
-using StatsPlots, StatsBase
+using StatsPlots
+using StatsBase
 using LaTeXStrings
 
 # export of plots
@@ -157,28 +158,52 @@ end
 """ Plots energy and standard deviation for every iteration step k averaged over
     N_runs.
 """
-function plot_Gav_av(Data_loaded)
-    Data_av_e_std = collect_av_e_std(Data_loaded)
-    Plots.plot(Data_av_e_std[1], title = L"\overline{G_{av}} \textrm{ depending on iteration step } k",
-            label = L"\overline{G_{av}}",
-            xaxis = L"\textrm{Iteration step } k", yaxis = L"\overline{G_{av}}",
-            xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
-            ribbon=Data_av_e_std[2], fillalpha=.2,
-            framestyle = :box, grid = true)
-    Plots.savefig("decreasing_Gav_av.pdf")
+function plot_Gav_av(Data_sim)
+    f = Figure(fontsize = 30)
+    Axis(f[1, 1],
+        title = title = L"<${G_{av}}$> depending on iteration step $k$",
+        # $\overline{G_{av}}$ does not work
+        titlesize = 30,
+        xlabel = L"Iteration step $k$",
+        xlabelsize = 30,
+        ylabel = L"<${G_{av}}$>",
+        ylabelsize = 30
+    )
+
+    Data_av_e_std = collect_av_e_std(Data_sim)
+    k= collect(1:Data_sim["k_max"])
+    μ = float.(Data_av_e_std[1])
+    lines!(k,μ,color = :blue,label = L"<${G_{av}}$>")
+
+    σ = Data_av_e_std[2]
+    band!(k, μ + σ, μ - σ, transparency=true, color = (:blue,0.2))
+
+    axislegend()
+    CairoMakie.save("decreasing_Gav_av.pdf",f)
 end
 
 """ Plots G_av for single run for each iteration step k.
 """
-function plot_Gav_single_run(Data_loaded, Run_Nr)
-    en = Data_loaded["energies"][Run_Nr]
-    Plots.plot(en, title = L"\textrm{Decreasing } G_{av} \textrm{ for one sample grid}",
-            label = L"G_{av}",
-            xaxis = L"\textrm{Iteration step } k", yaxis = L"G_{av}",
-            xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
-            framestyle = :box, grid = true)
-    Plots.savefig("decreasing_Gav_sample.pdf")
+function plot_Gav_single_run(Data_sim, Run_Nr)
+    f = Figure(fontsize = 30)
+    Axis(f[1, 1],
+        title = L"Decreasing $G_{av}$ for one sample grid",
+        titlesize = 30,
+        xlabel = L"Iteration step $k$",
+        xlabelsize = 30,
+        ylabel = L"G_{av}",
+        ylabelsize = 30
+    )
+
+    k = collect(1:Data_sim["k_max"])
+    en = float.(Data_sim["energies"][Run_Nr])
+    lines!(k,en,color = :blue,label = L"$G_{av}$")
+    axislegend()
+
+    CairoMakie.save("decreasing_Gav_sample.pdf",f)
 end
+
+
 
 """ Calculates histogram for flows and calculates average and standard deviation
     for single bins, so the average and standard deviation over all first bins and
@@ -200,7 +225,7 @@ function plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins
             xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
             ylabel = ylabelstr,
             label = labelstr,
-            title = L"\textrm{Normalized histogram of flow distribution}",
+            title = "Normalized histogram of flow distribution",
             bar_width = 0.67,
             lw = 0.0, markerstrokewidth = 0.7, markerstrokecolor = :black,
             c = [:deepskyblue :orange], #https://juliagraphics.github.io/Colors.jl/stable/namedcolors/
@@ -213,10 +238,10 @@ function plot_histogram_all_runs(Data_loaded)
     random = weights_mean_err(Data_loaded, "P_inits", nbins)
     minimized = weights_mean_err(Data_loaded, "P_finals", nbins)
     filename = "flows_rand_min_Gav.pdf"
-    xlabelstr = L"\textrm{10 bins of width 0.10 from bin 1 = } [0.00,0.10) \textrm{ to bin 10 = } [0.90,1.00)"
-    ylabelstr = L"\textrm{Normalized probability}"
-    labelstr = [L"\textrm{Grids with low } G_{av}" L"\textrm{Random grids}"]
-    titlestr = L"\textrm{Normalized histogram of flow distribution}"
+    xlabelstr = "10 bins of width 0.10 from bin 1=[0.00,0.10) to bin 10=[0.90,1.00)"
+    ylabelstr = "Normalized probability"
+    labelstr = ["Grids with low G_av" "Random grids"]
+    titlestr = "Normalized histogram of flow distribution"
     plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins,xlabelstr,ylabelstr,labelstr,titlestr)
 end
 
@@ -227,10 +252,10 @@ function plot_histogram_high_gc_low_Gav(Data_loaded, Data_loaded__high_gc_low_Ga
     random = weights_mean_err(Data_loaded, "P_inits", nbins)
     minimized = weights_mean_err(Data_loaded__high_gc_low_Gav, "P_finals", nbins)
     filename = "flows_rand_high_gc_low_Gav.pdf"
-    xlabelstr = L"\textrm{20 bins of width 0.05 from bin 1: } [0.00,0.05) \textrm{ to bin 20: } [0.95,1.00)"
-    ylabelstr = L"\textrm{Normalized probability}"
-    labelstr = [L"\textrm{Grids with high gc and low } G_{av}" L"\textrm{Random grids}"]
-    titlestr = L"\textrm{Distribution: Mean of 1000 random and 17 grids with high gc and low } G_{av}"
+    xlabelstr = "20 bins of width 0.05 from bin 1=[0.00,0.05) to bin 20=[0.95,1.00)"
+    ylabelstr = "Normalized probability"
+    labelstr = ["Grids with high gc and low G_av" "Random grids"]
+    titlestr = "Distribution: Mean of 1000 random and 17 grids with high gc and lowG_av"
     plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins,xlabelstr,ylabelstr,labelstr,titlestr)
 end
 
@@ -350,4 +375,33 @@ end
 #         push!(Data, SA_extremal)
 #     end
 #     Data
+# end
+
+########################## Plots using Plots.jl ################################
+# LaTeXStrings do not work properly
+
+# """ Plots G_av for single run for each iteration step k.
+# """
+# function plot_Gav_single_run(Data_loaded, Run_Nr)
+#     en = Data_loaded["energies"][Run_Nr]
+#     Plots.plot(en, title = L"\textrm{Decreasing } G_{av} \textrm{ for one sample grid}",
+#             label = L"G_{av}",
+#             xaxis = L"\textrm{Iteration step } k", yaxis = L"G_{av}",
+#             xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
+#             framestyle = :box, grid = true)
+#     Plots.savefig("decreasing_Gav_sample.pdf")
+# end
+
+# """ Plots energy and standard deviation for every iteration step k averaged over
+#     N_runs.
+# """
+# function plot_Gav_av(Data_loaded)
+#     Data_av_e_std = collect_av_e_std(Data_loaded)
+#     Plots.plot(Data_av_e_std[1], title = L"\overline{G_{av}} \textrm{ depending on iteration step } k",
+#             label = L"\overline{G_{av}}",
+#             xaxis = L"\textrm{Iteration step } k", yaxis = L"\overline{G_{av}}",
+#             xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
+#             ribbon=Data_av_e_std[2], fillalpha=.2,
+#             framestyle = :box, grid = true)
+#     Plots.savefig("decreasing_Gav_av.pdf")
 # end
