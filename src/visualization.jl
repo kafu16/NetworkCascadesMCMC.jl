@@ -78,12 +78,14 @@ function set_edge_colors(F::Array{Float64,1})
     edgefillc = RGB[]
 
     for value in F
-        # push!(edgefillc, cgrad(:blues, Int(ceil(maximum(F)*100)), categorical = true)[Int(ceil((value*100)))]) #, rev=true
-        push!(edgefillc, cgrad(:blues, 100, categorical = true)[Int(ceil((value*100)))]) #, rev=true
+        # push!(edgefillc, cgrad(:blues, Int(ceil(maximum(F)*100)), categorical = true)[Int(ceil((value*100)))])
+        push!(edgefillc, cgrad(:blues, 101; categorical = true)[Int(ceil((value*100))+1)]) 
 
     end
     edgefillc
 end
+
+
 
 function set_gencon_colors(g,P)
     # loop over all edges
