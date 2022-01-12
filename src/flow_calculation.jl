@@ -1,6 +1,6 @@
 ### flow calculation
 using IterativeSolvers
-
+using Graphs
 
 # N_vertices: number of vertices
 # m: number of edges
