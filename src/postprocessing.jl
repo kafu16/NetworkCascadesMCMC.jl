@@ -1,8 +1,6 @@
 #= This file contains functions that calculate observerbles out of the "raw" simulation
 data. =#
 
-# using LightGraphs
-
 struct Locality
     loc_1step_init
     loc_1step_final

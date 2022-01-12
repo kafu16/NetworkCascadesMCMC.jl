@@ -27,9 +27,10 @@ export plot_Gav_single_run, plot_Gav_av
 export plot_histogram_all_runs, plot_histogram_high_gc_low_Gav
 
 # visualization/plotting
-export visualize_graph, visualize_data, visualize_graph_after_linefailure_cascade
+export flows_colormap, compare_flows_colormap, visualize_gencon
 export plot_Gav_av, plot_Gav_single_run, plot_histogram_random_vs_minimized_G_av,
 plot_histogram_all_runs, plot_histogram_high_gc_low_Gav
+# export visualize_graph, visualize_data, visualize_graph_after_linefailure_cascade
 
 # square grids
 export gen_square_grid, gen_periodic_square_grid, gen_rand_grid
@@ -44,13 +45,6 @@ export temp_ex1_a, temp_ex1_b, temp_ex1_c, temp_ex2_a, temp_ex3_a, temp_ex3_b, t
 # old functions
 export collect_data_SA_runs
 
-
-# # save to pdf
-# draw(PDF("bla.pdf", 16cm, 16cm), gplot(g))
-# # save to png
-# draw(PNG("bla.png", 16cm, 16cm), gplot(g))
-# # save to svg
-# draw(SVG("bla.svg", 16cm, 16cm), gplot(g))
 
 end
 

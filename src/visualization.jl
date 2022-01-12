@@ -79,7 +79,7 @@ function set_edge_colors(F::Array{Float64,1})
 
     for value in F
         # push!(edgefillc, cgrad(:blues, Int(ceil(maximum(F)*100)), categorical = true)[Int(ceil((value*100)))])
-        push!(edgefillc, cgrad(:blues, 101; categorical = true)[Int(ceil((value*100))+1)]) 
+        push!(edgefillc, cgrad(:blues, 101; categorical = true)[Int(ceil((value*100))+1)])
 
     end
     edgefillc
@@ -253,6 +253,12 @@ end
 #     #gplot(g, locs_x, locs_y, nodefillc = nodefillc, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
 #     gplot(g, locs_x, locs_y, nodelabel = P, nodefillc = nodefillc, edgelabel = F, edgelabeldistx = 0, edgelabeldisty = 0)
 #     #gplot(g, locs_x, locs_y, nodefillc = nodefillc)
+# end
+#
+# function visualize_data(Data_loaded, P_rand_opt, Run_Nr) # for random grid: rand_opt=1 for optimized grid: rand_opt=4
+#     P = Data_loaded[P_rand_opt][Run_Nr]
+#     g = Data_loaded["Grid"]
+#     visualize_graph(g, P)
 # end
 #
 # ### visualize graph after line failure induced cascade

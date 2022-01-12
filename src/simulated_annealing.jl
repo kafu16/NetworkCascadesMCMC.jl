@@ -1,8 +1,7 @@
 ################################################################################
 # grid operations (funtions that change/refer to  grid topology) used for SA ###
 ################################################################################
-
-# using LightGraphs
+using Graphs
 
 ### failure/removal of edge that causes cascade
 function linefailure!(g::AbstractGraph, i::Integer) # edge i is removed

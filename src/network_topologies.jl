@@ -1,6 +1,6 @@
 #### building of square grid configuration
-# using LightGraphs
 using SyntheticNetworks
+using Graphs
 
 
 function gen_square_grid(N_side)

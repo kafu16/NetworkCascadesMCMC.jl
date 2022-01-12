@@ -149,12 +149,6 @@ end
 ################################## PLOTTING ####################################
 ################################################################################
 
-function visualize_data(Data_loaded, P_rand_opt, Run_Nr) # for random grid: rand_opt=1 for optimized grid: rand_opt=4
-    P = Data_loaded[P_rand_opt][Run_Nr]
-    g = Data_loaded["Grid"]
-    visualize_graph(g, P)
-end
-
 """ Plots energy and standard deviation for every iteration step k averaged over
     N_runs.
 """
