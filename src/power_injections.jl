@@ -1,6 +1,7 @@
 # net power injections P_i
 
 using Random
+using Graphs
 
 ################################ square grids ##################################
 # Building of an array whose entries represent nodes of square grid.
