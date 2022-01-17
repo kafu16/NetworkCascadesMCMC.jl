@@ -23,7 +23,7 @@ function postprocess_sim_anneal(Data_loaded, filepath_out, T)
     P_inits = Data_loaded["P_inits"]
     P_finals = Data_loaded["P_finals"]
     N_vertices = Data_loaded["N_vertices"]
-    g = Data_loaded["Grid"]
+    g = loadgraph("graph.lgz")
     ann_sched = Data_loaded["annealing_schedule"]
     steps_per_temp = Data_loaded["steps_per_temp"]
     C = Data_loaded["C"]
@@ -81,7 +81,7 @@ function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, ge
     P_inits = Data_loaded["P_inits"]
     P_finals = Data_loaded["P_finals"]
     N_vertices = Data_loaded["N_vertices"]
-    g = Data_loaded["Grid"]
+    g = loadgraph("graph.lgz")
     ann_sched = Data_loaded["annealing_schedule"]
     steps_per_temp = Data_loaded["steps_per_temp"]
     C = Data_loaded["C"]

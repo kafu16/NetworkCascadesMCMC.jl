@@ -178,7 +178,7 @@ function multiple_sim_anneal(filepath::String, g::AbstractGraph, P_inits::Vector
         push!(P_finals, P)
     end
     N_vertices = length(P_inits[1])
-    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
 using Distributed
@@ -194,7 +194,7 @@ function parallel_multiple_sim_anneal(filepath::String, g::AbstractGraph, P_init
     N_vertices = length(P_inits[1])
     P_finals = first.(Data)
     energies = last.(Data)
-    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
 
