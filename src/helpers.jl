@@ -96,20 +96,11 @@ function df_postprocessing(Data_loaded)
     N_T_init = Data_loaded["N_T_init"]
     N_T_final = Data_loaded["N_T_final"]
 
-    N_vertices = Data_loaded["N_vertices"]
-    C = Data_loaded["C"]
-    grid = Data_loaded["Grid"]
-    annealing_schedule = Data_loaded["annealing_schedule"]
-    steps_per_temp = Data_loaded["steps_per_temp"]
-    k_max = Data_loaded["k_max"]
-
     df = DataFrame("energy_init" => energy_init, "energy_final" => energy_final,
         "loc_1step_init" => loc_1step_init, "loc_1step_final" => loc_1step_final, "loc_1step_0_init" => loc_1step_0_init, "loc_1step_0_final" => loc_1step_0_final,
         "gen_gen_init" => gen_gen_init, "con_con_init" => con_con_init, "gen_con_init" => gen_con_init,
         "gen_gen_final" => gen_gen_final, "con_con_final" => con_con_final, "gen_con_final" => gen_con_final,
-        "N_T_init" => N_T_init, "N_T_final" => N_T_final,
-        "N_vertices" => N_vertices, "C" => C, "Grid" => grid,
-        "annealing_schedule" => annealing_schedule, "steps_per_temp" => steps_per_temp, "k_max" => k_max)
+        "N_T_init" => N_T_init, "N_T_final" => N_T_final)
 end
 
 
@@ -118,6 +109,41 @@ function flows_above_thres(T, P, g) # gives number of flows above threshold T
     count(x -> x > T, abs.(F))
 end
 
+""" Calculates energy for every iteration step k averaged over N_runs.
+"""
+function energy_mean(energies, k_max, N_runs)
+    Data_mean = [ ]
+
+    for i in 1:k_max
+        # calculate mean for each iteration step k
+        Data_x = [ ] # energy values for each run at iteration step k
+        for j in 1:N_runs
+            x = energies[j][i]
+            push!(Data_x, x)
+        end
+        x = mean(Data_x)
+        push!(Data_mean, x)
+    end
+    Data_mean
+end
+
+""" Calculates standard deviation for every iteration step k averaged over N_runs.
+"""
+function std_mean(energies, k_max, N_runs)
+    Data_mean = [ ]
+
+    for i in 1:k_max
+        # calculate mean for each iteration step k
+        Data_x = [ ] # energy values for each run at iteration step k
+        for j in 1:N_runs
+            x = energies[j][i]
+            push!(Data_x, x)
+        end
+        y = 1 / sqrt(N_runs) * std(Data_x; corrected=true)
+        push!(Data_std, y)
+    end
+    Data_mean
+end
 
 """ Calculates energy and standard deviation for every iteration step k averaged
     over N_runs.
@@ -139,7 +165,13 @@ function collect_av_e_std(Data_loaded)
         x = mean(Data_x)
         push!(Data_mean, x)
 
-        y = 1 / sqrt(N_runs) * std(Data_x; corrected=true)
+        std_k_sum = 0
+        μ = Data_mean[i]
+        for j in 1:N_runs
+            std_k_sum = std_k_sum + (energies[j][i] - μ)^2
+
+        end
+        y = sqrt(1/(N_runs *(N_runs -1)) * std_k_sum)
         push!(Data_std, y)
     end
     Data_mean, Data_std
@@ -171,6 +203,26 @@ function plot_Gav_av(Data_sim)
 
     σ = Data_av_e_std[2]
     band!(k, μ + σ, μ - σ, transparency=true, color = (:blue,0.2))
+
+    axislegend()
+    CairoMakie.save("decreasing_Gav_av.pdf",f)
+end
+
+function plot_Gav_av_merge(μ, stderror)
+    f = Figure(fontsize = 30)
+    Axis(f[1, 1],
+        title = title = L"<${G_{av}}$> depending on iteration step $k$",
+        # $\overline{G_{av}}$ does not work
+        titlesize = 30,
+        xlabel = L"Iteration step $k$",
+        xlabelsize = 30,
+        ylabel = L"<${G_{av}}$>",
+        ylabelsize = 30
+    )
+
+    k= collect(1:Data_sim["k_max"])
+    lines!(k,μ,color = :blue,label = L"<${G_{av}}$>")
+    band!(k, μ + stderror, μ - stderror, transparency=true, color = (:blue,0.2))
 
     axislegend()
     CairoMakie.save("decreasing_Gav_av.pdf",f)
@@ -370,6 +422,30 @@ end
 #     end
 #     Data
 # end
+
+# function collect_av_e_std(Data_loaded)
+#     N_runs = Data_loaded["N_runs"]
+#     k_max = Data_loaded["k_max"]
+#     energies = Data_loaded["energies"]
+#     Data_mean = [ ]
+#     Data_std = [ ]
+#
+#     for i in 1:k_max
+#         # calculate mean for each iteration step k
+#         Data_x = [ ] # energy values for each run at iteration step k
+#         for j in 1:N_runs
+#             x = energies[j][i]
+#             push!(Data_x, x)
+#         end
+#         x = mean(Data_x)
+#         push!(Data_mean, x)
+#
+#         y = 1 / sqrt(N_runs) * std(Data_x; corrected=true)
+#         push!(Data_std, y)
+#     end
+#     Data_mean, Data_std
+# end
+
 
 ########################## Plots using Plots.jl ################################
 # LaTeXStrings do not work properly

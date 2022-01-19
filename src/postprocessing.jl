@@ -75,6 +75,58 @@ function postprocess_sim_anneal(Data_loaded, filepath_out, T)
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
 end
 
+function postprocess_sim_anneal_merge(Data_loaded, filepath_out, T)
+    energy_init = Data_loaded["energy_init"]; energy_final = Data_loaded["energy_final"]
+    P_inits = Data_loaded["P_inits"]
+    P_finals = Data_loaded["P_finals"]
+    N_vertices = Data_loaded["N_vertices"]
+    g = loadgraph("graph.lgz")
+    ann_sched = Data_loaded["annealing_schedule"]
+    steps_per_temp = Data_loaded["steps_per_temp"]
+    C = Data_loaded["C"]
+    k_max = Data_loaded["k_max"]
+    N_runs = Data_loaded["N_runs"]
+
+    N_T_init = []; N_T_final = []
+    loc_1step_init = []; loc_1step_final = []
+    loc_1step_0_init = []; loc_1step_0_final = []
+    gen_gen_init = []; con_con_init = []; gen_con_init = []
+    gen_gen_final = []; con_con_final = []; gen_con_final = []
+
+    for i in 1:N_runs
+        # number of flows above a certain threshold for initial and final configutations
+        push!(N_T_init, flows_above_thres(T, P_inits[i], g))
+        push!(N_T_final, flows_above_thres(T, P_finals[i], g))
+
+        # locality
+        loc_1step_init_single_run = loc_1step(g, P_inits[i], C)
+        loc_1step_final_single_run = loc_1step(g, P_finals[i], C)
+        loc_1step_0_init_single_run = loc_1step_0(g, P_inits[i], C)
+        loc_1step_0_final_single_run = loc_1step_0(g, P_finals[i], C)
+        push!(loc_1step_init, loc_1step_init_single_run)
+        push!(loc_1step_final, loc_1step_final_single_run)
+        push!(loc_1step_0_init, loc_1step_0_init_single_run)
+        push!(loc_1step_0_final, loc_1step_0_final_single_run)
+
+        # nr_gen_con
+        gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
+        push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
+        gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
+        push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
+    end
+
+    nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
+    nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
+    locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
+
+
+    JLD.save(filepath_out, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
+        "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
+        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
+        "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
+end
+
+
 function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, gen_con, G_av_final)
     Data_loaded = JLD.load(filepath_in)
     energies = Data_loaded["energies"]
@@ -359,6 +411,99 @@ function locality(Data_loaded)
     A, B
 end
 
+
+################################################################################
+####################### Handling of large simulations ##########################
+################################################################################
+
+# Strategy to handle big files in order to circumvene the proplem that it is not
+# possible to load all simulation data at once in order to calculate mean and standard
+# deviation of all runs:
+
+# In order to calculate the standard deviation, at first the mean energy for each
+# iteration step k must be calculated. Within each seperate simulation-run the mean
+# for the respective simulation run is calculated and saved to a seperate file
+# (mean_sim_data.jld).
+# The mean over ALL simulation runs is calculated within the following loop over
+# different directories containing the mean_sim_data.jld-files:
+
+function energy_mean_multiple_simulations(directories, k_max)
+    sum_energies_k = zeros(k_max)
+    number_of_all_runs = 0
+    for directory in directories
+        data_directory = string(directory,"/mean_sim_data.jld")
+        data = JLD.load(data_directory)
+
+        number_of_all_runs = number_of_all_runs + data["N_runs"]
+        sum_energies_k = sum_energies_k + data["energy_mean"] * data["N_runs"]
+    end
+    mean_energies_k = sum_energies_k./number_of_all_runs
+    mean_energies_k, number_of_all_runs
+end
+
+# Now given mean_energies_k (see energy_mean_multiple_simulations()) above,
+# it has to be looped again  over directories to calculate the standard deviation
+# and subsequently the standard error. At the same time the other remaining data
+# of the all simulation runs is merged into one single file:
+
+function standard_error_and_merge_multiple_simulations(directory, directories, repo_directory, number_of_all_runs, g, k_max, mean_energies_k, N_vertices, annealing_schedule_name, steps_per_temp, C)
+    std_k_sum = zeros(k_max) # variance multiplied by number_of_all_runs
+    energy_init = [ ]; energy_final = [ ]
+    P_inits = [ ]; P_finals = [ ]
+    for dir in directories
+        data_directory = string(dir,"/simulation_data.jld")
+        data = JLD.load(data_directory)
+
+        # calculation of std_k_sum
+        energies = data["energies"]
+        N_runs = data["N_runs"]
+        for i in 1:N_runs
+            for j in 1:k_max
+                std_k_sum[j] = std_k_sum[j] + (energies[i][j] - mean_energies_k[j])^2
+            end
+            # calculating observables
+            # energy of initial and final configutations
+            push!(energy_init, energies[i][1])
+            push!(energy_final, energies[i][k_max])
+        end
+        # append configurations
+        P_inits = append!(P_inits,data["P_inits"])
+        P_finals = append!(P_finals,data["P_finals"])
+    end
+    # standard_error = 1/((number_of_all_runs - 1).^(1/2) * number_of_all_runs.^(1/2)) * std_k_sum.^(1/2)
+    standard_error = 1/sqrt(number_of_all_runs * (number_of_all_runs - 1)) * std_k_sum.^(1/2)
+    N_runs = number_of_all_runs # for filename
+
+    # save mean and standard error to file
+    mean_stderror_data = string(directory,"/mean_stderror_data.jld")
+    JLD.save(mean_stderror_data, "energy_mean",mean_energies_k, "energy_standard_error",standard_error,
+        "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices,
+        "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp,
+        "C",C , "k_max",k_max, "N_runs",N_runs)
+
+    # save merged simulation data to file
+    merged_final_sim_data = string(directory,"/merged_final_sim_data.jld") #file that combines multiple simulation files
+    JLD.save(merged_final_sim_data, "P_inits",P_inits, "P_finals",P_finals,
+        "energy_init",energy_init, "energy_final",energy_final,
+        "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name,
+        "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+
+    savegraph("graph.lgz", g)
+end
+
+function execute_postprocessing(directory, T)
+    postprocess_data = string(directory,"/postprocess_data.jld")
+    print("\npostprocess_sim_anneal ")
+    merged_final_sim_data = string(directory,"/merged_final_sim_data.jld")
+    Data_sim = JLD.load(merged_final_sim_data)
+    postprocess_sim_anneal_merge(Data_sim, postprocess_data, T)
+    Data_post = JLD.load(postprocess_data)
+    filename = "params_postprocess.txt"
+    write_out_params(Data_post, filename)
+    write_out_postprocess(Data_post, filename)
+    df = df_postprocessing(Data_post)
+    CSV.write(string(directory,"/data_postprocess.csv"), df)
+end
 
 ################################################################################
 ######################### DEPRECATED FUNCTIONS##################################

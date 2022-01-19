@@ -169,7 +169,7 @@ function sim_anneal(g::AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat
 end
 
 
-function multiple_sim_anneal(filepath::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function multiple_sim_anneal(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     energies = []
     P_finals = []
     for i in 1:N_runs
@@ -178,13 +178,18 @@ function multiple_sim_anneal(filepath::String, g::AbstractGraph, P_inits::Vector
         push!(P_finals, P)
     end
     N_vertices = length(P_inits[1])
-    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    simulation_data = string(directory,"/simulation_data.jld")
+    JLD.save(simulation_data, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+
+    mean_sim_data = string(directory,"/mean_sim_data.jld")
+    energy_mean_k = energy_mean(energies, k_max, N_runs) # mean energy for each step k
+    JLD.save(mean_sim_data, "energy_mean",energy_mean_k, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
 using Distributed
 """ For parallel computing on high performance clusters.
 """
-function parallel_multiple_sim_anneal(filepath::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function parallel_multiple_sim_anneal(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     Data = @distributed vcat for i in 1:N_runs
         sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
         #P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
@@ -194,7 +199,11 @@ function parallel_multiple_sim_anneal(filepath::String, g::AbstractGraph, P_init
     N_vertices = length(P_inits[1])
     P_finals = first.(Data)
     energies = last.(Data)
-    JLD.save(filepath, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    JLD.save(directory, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+
+    mean_sim_data = string(directory,"/mean_sim_data.jld")
+    energy_mean_k = energy_mean(energies, k_max, N_runs) # mean energy for each step k
+    JLD.save(mean_sim_data, "energy_mean",energy_mean_k, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
 

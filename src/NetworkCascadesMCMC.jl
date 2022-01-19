@@ -21,6 +21,7 @@ export flow, linefailure!, cascade!
 export postprocess_sim_anneal, postprocess_sim_anneal_high_gc_low_Gav
 export write_out_params, write_out_postprocess, df_postprocessing
 export flows_above_thres, nr_gen_con, nr_gen_con_av, locality
+export energy_mean_multiple_simulations, standard_error_and_merge_multiple_simulations, execute_postprocessing
 
 # plotting
 export plot_Gav_single_run, plot_Gav_av
@@ -54,5 +55,4 @@ end
  - [ ] Performance: code linefailure!() with sparse matrix
  - [ ] Performance: instead of calculating incidence matrix multiple times anew actualize entries of the matrix
  - [ ] if advantageous do package internal data management using DataFrames
- - [ ] visualization: heat map for flows
 =#
