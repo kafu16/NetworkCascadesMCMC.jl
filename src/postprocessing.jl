@@ -75,12 +75,12 @@ function postprocess_sim_anneal(Data_loaded, filepath_out, T)
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
 end
 
-function postprocess_sim_anneal_merge(Data_loaded, filepath_out, T)
+function postprocess_sim_anneal_merge(directory, Data_loaded, filepath_out, T)
     energy_init = Data_loaded["energy_init"]; energy_final = Data_loaded["energy_final"]
     P_inits = Data_loaded["P_inits"]
     P_finals = Data_loaded["P_finals"]
     N_vertices = Data_loaded["N_vertices"]
-    g = loadgraph("graph.lgz")
+    g = loadgraph(string(directory,"/graph.lgz"))
     ann_sched = Data_loaded["annealing_schedule"]
     steps_per_temp = Data_loaded["steps_per_temp"]
     C = Data_loaded["C"]
@@ -472,21 +472,20 @@ function standard_error_and_merge_multiple_simulations(directory, directories, r
     end
     # standard_error = 1/((number_of_all_runs - 1).^(1/2) * number_of_all_runs.^(1/2)) * std_k_sum.^(1/2)
     standard_error = 1/sqrt(number_of_all_runs * (number_of_all_runs - 1)) * std_k_sum.^(1/2)
-    N_runs = number_of_all_runs # for filename
 
     # save mean and standard error to file
     mean_stderror_data = string(directory,"/mean_stderror_data.jld")
     JLD.save(mean_stderror_data, "energy_mean",mean_energies_k, "energy_standard_error",standard_error,
         "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices,
         "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp,
-        "C",C , "k_max",k_max, "N_runs",N_runs)
+        "C",C , "k_max",k_max, "N_runs",number_of_all_runs)
 
     # save merged simulation data to file
     merged_final_sim_data = string(directory,"/merged_final_sim_data.jld") #file that combines multiple simulation files
     JLD.save(merged_final_sim_data, "P_inits",P_inits, "P_finals",P_finals,
         "energy_init",energy_init, "energy_final",energy_final,
         "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name,
-        "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+        "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",number_of_all_runs)
 
     savegraph("graph.lgz", g)
 end
@@ -496,7 +495,8 @@ function execute_postprocessing(directory, T)
     print("\npostprocess_sim_anneal ")
     merged_final_sim_data = string(directory,"/merged_final_sim_data.jld")
     Data_sim = JLD.load(merged_final_sim_data)
-    postprocess_sim_anneal_merge(Data_sim, postprocess_data, T)
+    cd(directory)
+    postprocess_sim_anneal_merge(directory, Data_sim, postprocess_data, T)
     Data_post = JLD.load(postprocess_data)
     filename = "params_postprocess.txt"
     write_out_params(Data_post, filename)
