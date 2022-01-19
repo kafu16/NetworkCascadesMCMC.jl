@@ -220,7 +220,8 @@ function plot_Gav_av_merge(μ, stderror)
         ylabelsize = 30
     )
 
-    k= collect(1:Data_sim["k_max"])
+    k_max = length(μ)
+    k= collect(1:k_max)
     lines!(k,μ,color = :blue,label = L"<${G_{av}}$>")
     band!(k, μ + stderror, μ - stderror, transparency=true, color = (:blue,0.2))
 
