@@ -29,7 +29,7 @@ export plot_histogram_all_runs, plot_histogram_high_gc_low_Gav
 
 # visualization/plotting
 export flows_colormap, compare_flows_colormap, visualize_gencon
-export plot_Gav_av, plot_Gav_single_run, plot_histogram_random_vs_minimized_G_av,
+export plot_Gav_av, plot_Gav_av_merge, plot_Gav_single_run, plot_histogram_random_vs_minimized_G_av,
 plot_histogram_all_runs, plot_histogram_high_gc_low_Gav
 # export visualize_graph, visualize_data, visualize_graph_after_linefailure_cascade
 
