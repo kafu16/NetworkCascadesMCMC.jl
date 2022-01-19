@@ -199,7 +199,8 @@ function parallel_multiple_sim_anneal(directory::String, g::AbstractGraph, P_ini
     N_vertices = length(P_inits[1])
     P_finals = first.(Data)
     energies = last.(Data)
-    JLD.save(directory, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+    simulation_data = string(directory,"/simulation_data.jld")
+    JLD.save(simulation_data, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 
     mean_sim_data = string(directory,"/mean_sim_data.jld")
     energy_mean_k = energy_mean(energies, k_max, N_runs) # mean energy for each step k
