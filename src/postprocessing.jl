@@ -14,67 +14,13 @@ struct Nr_gen_con
     gen_con
 end
 
-""" Function that takes .jld-file as input containing the value of the energy for
-    each iteration step of simulated annealing and executes multiple postprocessing
-    functions. The resulting postprocessing data is saved as another .jl-file.
+
+
+""" Merging multiple runs. Function that takes .jld-file as input containing the
+    value of the energy for each iteration step of simulated annealing and executes
+    multiple postprocessing functions. The resulting postprocessing data is saved
+    as another .jl-file.
 """
-function postprocess_sim_anneal(Data_loaded, filepath_out, T)
-    energies = Data_loaded["energies"]
-    P_inits = Data_loaded["P_inits"]
-    P_finals = Data_loaded["P_finals"]
-    N_vertices = Data_loaded["N_vertices"]
-    g = loadgraph("graph.lgz")
-    ann_sched = Data_loaded["annealing_schedule"]
-    steps_per_temp = Data_loaded["steps_per_temp"]
-    C = Data_loaded["C"]
-    k_max = Data_loaded["k_max"]
-    N_runs = Data_loaded["N_runs"]
-
-    energy_init = []; energy_final = []
-    N_T_init = []; N_T_final = []
-    loc_1step_init = []; loc_1step_final = []
-    loc_1step_0_init = []; loc_1step_0_final = []
-    gen_gen_init = []; con_con_init = []; gen_con_init = []
-    gen_gen_final = []; con_con_final = []; gen_con_final = []
-
-    for i in 1:N_runs
-
-        # calculating observables
-        # energy of initial and final configutations
-        push!(energy_init, energies[i][1])
-        push!(energy_final, energies[i][k_max])
-
-        # number of flows above a certain threshold for initial and final configutations
-        push!(N_T_init, flows_above_thres(T, P_inits[i], g))
-        push!(N_T_final, flows_above_thres(T, P_finals[i], g))
-
-        # locality
-        loc_1step_init_single_run = loc_1step(g, P_inits[i], C)
-        loc_1step_final_single_run = loc_1step(g, P_finals[i], C)
-        loc_1step_0_init_single_run = loc_1step_0(g, P_inits[i], C)
-        loc_1step_0_final_single_run = loc_1step_0(g, P_finals[i], C)
-        push!(loc_1step_init, loc_1step_init_single_run)
-        push!(loc_1step_final, loc_1step_final_single_run)
-        push!(loc_1step_0_init, loc_1step_0_init_single_run)
-        push!(loc_1step_0_final, loc_1step_0_final_single_run)
-
-        # nr_gen_con
-        gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
-        push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
-        gen_gen_single_run_final, con_con_single_run_final, gen_con_single_run_final = nr_gen_con(g,P_finals[i])
-        push!(gen_gen_final,gen_gen_single_run_final); push!(con_con_final,con_con_single_run_final); push!(gen_con_final,gen_con_single_run_final);
-    end
-
-    nr_gen_con_init = Nr_gen_con(gen_gen_init, con_con_init, gen_con_init)
-    nr_gen_con_final = Nr_gen_con(gen_gen_final, con_con_final, gen_con_final)
-    locality = Locality(loc_1step_init,loc_1step_final,loc_1step_0_init,loc_1step_0_final)
-
-    JLD.save(filepath_out, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
-        "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
-        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
-        "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
-end
-
 function postprocess_sim_anneal_merge(directory, Data_loaded, filepath_out, T)
     energy_init = Data_loaded["energy_init"]; energy_final = Data_loaded["energy_final"]
     P_inits = Data_loaded["P_inits"]
@@ -88,6 +34,7 @@ function postprocess_sim_anneal_merge(directory, Data_loaded, filepath_out, T)
     N_runs = Data_loaded["N_runs"]
 
     N_T_init = []; N_T_final = []
+    G_av_init = []; G_av_final = []
     loc_1step_init = []; loc_1step_final = []
     loc_1step_0_init = []; loc_1step_0_final = []
     gen_gen_init = []; con_con_init = []; gen_con_init = []
@@ -108,6 +55,12 @@ function postprocess_sim_anneal_merge(directory, Data_loaded, filepath_out, T)
         push!(loc_1step_0_init, loc_1step_0_init_single_run)
         push!(loc_1step_0_final, loc_1step_0_final_single_run)
 
+        # G_av
+        G_av_init_single_run = energy_G(g, P_inits[i], C)[2]
+        G_av_final_single_run = energy_G(g, P_finals[i], C)[2]
+        push!(G_av_init, G_av_init_single_run)
+        push!(G_av_final, G_av_final_single_run)
+
         # nr_gen_con
         gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
         push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
@@ -122,11 +75,12 @@ function postprocess_sim_anneal_merge(directory, Data_loaded, filepath_out, T)
 
     JLD.save(filepath_out, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "Grid",g,
         "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs,
-        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
+        "energy_init",energy_init, "energy_final",energy_final, "G_av_init",G_av_init, "G_av_final", G_av_final,
+        "N_T_init",N_T_init, "N_T_final",N_T_final,
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
 end
 
-
+# [2022-03-10 Do] May be needed to be adapted to code capable of different energy-funtions.
 function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, gen_con, G_av_final)
     Data_loaded = JLD.load(filepath_in)
     energies = Data_loaded["energies"]
@@ -146,6 +100,7 @@ function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, ge
 
     energy_init = []; energy_final = []
     N_T_init = []; N_T_final = []
+    G_av_init = []; G_av_final = []
     loc_1step_init = []; loc_1step_final = []
     loc_1step_0_init = []; loc_1step_0_final = []
     gen_gen_init = []; con_con_init = []; gen_con_init = []
@@ -178,6 +133,12 @@ function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, ge
             push!(loc_1step_0_init, loc_1step_0_init_single_run)
             push!(loc_1step_0_final, loc_1step_0_final_single_run)
 
+            # G_av
+            G_av_init_single_run = energy_G(g, P_inits[i], C)[2]
+            G_av_final_single_run = energy_G(g, P_finals[i], C)[2]
+            push!(G_av_init, G_av_init_single_run)
+            push!(G_av_final, G_av_final_single_run)
+
             # nr_gen_con
             gen_gen_single_run_init, con_con_single_run_init, gen_con_single_run_init = nr_gen_con(g,P_inits[i])
             push!(gen_gen_init,gen_gen_single_run_init); push!(con_con_init,con_con_single_run_init); push!(gen_con_init,gen_con_single_run_init);
@@ -194,13 +155,13 @@ function postprocess_sim_anneal_high_gc_low_Gav(filepath_in, filepath_out, T, ge
 
     JLD.save(filepath_out, "energies",energies_high_gc_low_Gav, "P_inits",P_inits_high_gc_low_Gav, "P_finals",P_finals_high_gc_low_Gav, "N_vertices",N_vertices, "Grid",g,
         "annealing_schedule",ann_sched, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs_high_gc_low_Gav,
-        "energy_init",energy_init, "energy_final",energy_final, "N_T_init",N_T_init, "N_T_final",N_T_final,
+        "energy_init",energy_init, "energy_final",energy_final, "G_av_init",G_av_init, "G_av_final", G_av_final,
+        "N_T_init",N_T_init, "N_T_final",N_T_final,
         "locality",locality, "nr_gen_con_init",nr_gen_con_init, "nr_gen_con_final",nr_gen_con_final)
 end
 
-
-### results SA: calculating Gav_av and STD_Gav (averaged over all runs)
-function Gav_av_STD_Gav(Data_loaded)
+### results SA: calculating energy_av and energy_STD (averaged over all runs)
+function energy_av_STD(Data_loaded)
     N_runs = Data_loaded["N_runs"]
     # random grids
     Gav_av_init = round.(mean(Data_loaded["energy_init"]); digits = 2)
@@ -208,6 +169,18 @@ function Gav_av_STD_Gav(Data_loaded)
     # minimized G_av
     Gav_av_final = round.(mean(Data_loaded["energy_final"]); digits = 2)
     STD_Gav_final = round.(1 / sqrt(N_runs) * std(Data_loaded["energy_final"]; corrected=true); digits = 2)
+    Gav_av_init, STD_Gav_init, Gav_av_final, STD_Gav_final
+end
+
+### results SA: calculating Gav_av and STD_Gav (averaged over all runs)
+function Gav_av_STD_Gav(Data_loaded)
+    N_runs = Data_loaded["N_runs"]
+    # random grids
+    Gav_av_init = round.(mean(Data_loaded["G_av_init"]); digits = 2)
+    STD_Gav_init = round.(1 / sqrt(N_runs) * std(Data_loaded["G_av_init"]; corrected=true); digits = 2) # corrected=true is default of std(), so it could be omitted
+    # minimized G_av
+    Gav_av_final = round.(mean(Data_loaded["G_av_final"]); digits = 2)
+    STD_Gav_final = round.(1 / sqrt(N_runs) * std(Data_loaded["G_av_final"]; corrected=true); digits = 2)
     Gav_av_init, STD_Gav_init, Gav_av_final, STD_Gav_final
 end
 
@@ -239,12 +212,12 @@ end
 
 function nr_gen_con_av(Data_loaded, P_rand_opt)
     N_runs = Data_loaded["N_runs"]
-    gen_gen_av = mean(Data_loaded[P_rand_opt].gen_gen)
-    con_con_av = mean(Data_loaded[P_rand_opt].con_con)
-    gen_con_av = mean(Data_loaded[P_rand_opt].gen_con)
-    gen_gen_std = 1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].gen_gen)
-    con_con_std = 1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].con_con)
-    gen_con_std = 1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].gen_con)
+    gen_gen_av = round.(mean(Data_loaded[P_rand_opt].gen_gen); digits = 4)
+    con_con_av = round.(mean(Data_loaded[P_rand_opt].con_con); digits = 4)
+    gen_con_av = round.(mean(Data_loaded[P_rand_opt].gen_con); digits = 4)
+    gen_gen_std = round.(1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].gen_gen); digits = 4)
+    con_con_std = round.(1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].con_con); digits = 4)
+    gen_con_std = round.(1 / sqrt(N_runs) * std(Data_loaded[P_rand_opt].gen_con); digits = 4)
     gen_gen_av, gen_gen_std, con_con_av, con_con_std, gen_con_av, gen_con_std
 end
 

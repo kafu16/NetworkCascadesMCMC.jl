@@ -47,7 +47,7 @@ end
 ################################################################################
 using Statistics
 
-function energy(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
+function energy_G(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
     g = copy(g_init)
     B = Array(incidence_matrix(g, oriented=true))
     m = size(B)[2] # size() gives array containing number of rows and columns of incidence matrix b, [2] accesses number of columns
@@ -77,10 +77,10 @@ function energy(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # 
     G, G_av # this way two values in a tuple are returned by a function
 end
 
-# function energy(g_init::LightGraphs.AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
-#     G = 0
-#     G, convert(Float64,nr_gen_con(g_init, P)[3]) # this way two values in a tuple are returned by a function
-# end
+function energy_gencon(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat) # calculates energy of step k, C: threshold that marks line failure,
+    G = 0
+    G, convert(Float64,nr_gen_con(g_init, P)[3]) # this way two values in a tuple are returned by a function
+end
 
 ################################################################################
 ########################## Monte Carlo step functions ##########################
@@ -136,7 +136,7 @@ end
 ### key code of SA
 
 # core function for simulated annealing
-function sim_anneal(g::AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
+function sim_anneal(g::AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, energy::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
     # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
 
     en = [ ]
@@ -169,11 +169,11 @@ function sim_anneal(g::AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat
 end
 
 
-function multiple_sim_anneal(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function multiple_sim_anneal(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, energy::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     energies = []
     P_finals = []
     for i in 1:N_runs
-        P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
+        P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, energy, steps_per_temp, k_max)
         push!(energies, en)
         push!(P_finals, P)
     end

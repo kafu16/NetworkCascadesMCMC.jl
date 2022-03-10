@@ -43,6 +43,13 @@ function write_out_postprocess(Data_loaded, filename)
     open(filename, "a") do io
         write(io, "POSTPROCESSING DATA\n\n")
 
+        write(io, "Energy for random and optimized configurations:\n")
+        write(io, "Energy_init: "); write(io, string(energy_av_STD(Data_loaded)[1]))
+        write(io, " +/- "); write(io, string(energy_av_STD(Data_loaded)[2])); write(io, "\n")
+        write(io, "Energy_final: "); write(io, string(energy_av_STD(Data_loaded)[3]))
+        write(io, " +/- "); write(io, string(energy_av_STD(Data_loaded)[4])); write(io, "\n")
+        write(io, "\n\n")
+
         write(io, "Gav_av for random and optimized configurations:\n")
         write(io, "Gav_av_init: "); write(io, string(Gav_av_STD_Gav(Data_loaded)[1]))
         write(io, " +/- "); write(io, string(Gav_av_STD_Gav(Data_loaded)[2])); write(io, "\n")
@@ -81,6 +88,9 @@ function df_postprocessing(Data_loaded)
     energy_init = Data_loaded["energy_init"]
     energy_final = Data_loaded["energy_final"]
 
+    G_av_init = Data_loaded["G_av_init"]
+    G_av_final = Data_loaded["G_av_final"]
+
     loc_1step_init = last.(Data_loaded["locality"].loc_1step_init)
     loc_1step_final = last.(Data_loaded["locality"].loc_1step_final)
     loc_1step_0_init = last.(Data_loaded["locality"].loc_1step_0_init)
@@ -97,6 +107,7 @@ function df_postprocessing(Data_loaded)
     N_T_final = Data_loaded["N_T_final"]
 
     df = DataFrame("energy_init" => energy_init, "energy_final" => energy_final,
+        "G_av_init" => G_av_init, "G_av_final" => G_av_final,
         "loc_1step_init" => loc_1step_init, "loc_1step_final" => loc_1step_final, "loc_1step_0_init" => loc_1step_0_init, "loc_1step_0_final" => loc_1step_0_final,
         "gen_gen_init" => gen_gen_init, "con_con_init" => con_con_init, "gen_con_init" => gen_con_init,
         "gen_gen_final" => gen_gen_final, "con_con_final" => con_con_final, "gen_con_final" => gen_con_final,
