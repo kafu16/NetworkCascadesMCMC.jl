@@ -189,9 +189,9 @@ end
 using Distributed
 """ For parallel computing on high performance clusters.
 """
-function parallel_multiple_sim_anneal(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+function parallel_multiple_sim_anneal(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, energy::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
     Data = @distributed vcat for i in 1:N_runs
-        sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
+        sim_anneal(g, P_inits[i], C, annealing_schedule, energy, steps_per_temp, k_max)
         #P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
         #push!(energies, en)
         #push!(P_finals, P)
