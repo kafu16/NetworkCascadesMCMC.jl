@@ -14,7 +14,7 @@ include("postprocessing.jl")
 
 ########################### export functions ###################################
 # core code simulated annealing
-export energy_G, energy_gencon, sim_anneal, multiple_sim_anneal, parallel_multiple_sim_anneal
+export energy_G, energy_gencon, sim_anneal, multiple_sim_anneal, parallel_multiple_sim_anneal, parallel_multiple_sim_anneal_old
 export flow, linefailure!, cascade!
 
 # postprocessing

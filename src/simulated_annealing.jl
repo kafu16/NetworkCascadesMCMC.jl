@@ -207,6 +207,63 @@ function parallel_multiple_sim_anneal(directory::String, g::AbstractGraph, P_ini
     JLD.save(mean_sim_data, "energy_mean",energy_mean_k, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
 end
 
+################################################################################
+############################### testing   ######################################
+################################################################################
+
+
+function parallel_multiple_sim_anneal_old(directory::String, g::AbstractGraph, P_inits::Vector{Any}, C::AbstractFloat, annealing_schedule::Function, annealing_schedule_name::String, steps_per_temp::Integer, k_max::Integer, N_runs::Integer)
+    Data = @distributed vcat for i in 1:N_runs
+        sim_anneal_old(g, P_inits[i], C, annealing_schedule, energy, steps_per_temp, k_max)
+        #P, en = sim_anneal(g, P_inits[i], C, annealing_schedule, steps_per_temp, k_max)
+        #push!(energies, en)
+        #push!(P_finals, P)
+    end
+    N_vertices = length(P_inits[1])
+    P_finals = first.(Data)
+    energies = last.(Data)
+    simulation_data = string(directory,"/simulation_data.jld")
+    JLD.save(simulation_data, "energies",energies, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+
+    mean_sim_data = string(directory,"/mean_sim_data.jld")
+    energy_mean_k = energy_mean(energies, k_max, N_runs) # mean energy for each step k
+    JLD.save(mean_sim_data, "energy_mean",energy_mean_k, "P_inits",P_inits, "P_finals",P_finals, "N_vertices",N_vertices, "annealing_schedule",annealing_schedule_name, "steps_per_temp",steps_per_temp, "C",C , "k_max",k_max, "N_runs",N_runs)
+end
+
+function sim_anneal_old(g::AbstractGraph, P_init::Array{Float64,1}, C::AbstractFloat, annealing_schedule::Function, steps_per_temp::Integer, k_max::Integer) # k_max: setting number of computation steps
+    # given an initial configuration P sim_anneal() tendentially finds a more stable configuration
+
+    en = [ ]
+    energy_init = energy_G(g, P_init, C)[2] # by [2] only the second value of tuple is returned (G_av)
+    push!(en, energy_init)
+    P = copy(P_init)
+
+    for k in 1:k_max-1
+        T = annealing_schedule(k,steps_per_temp) # floor(x) returns the nearest integral value of the same type as x that is less than or equal to x
+        P_old = copy(P) # for calculating the energy of "old" configuration
+        P = stable_swapped_config!(g, P, C)
+        energy_old = en[k]
+        energy_new = energy_G(g, P, C)[2] # by [2] only the second value of tuple is returned (G_av)
+        ΔE = energy_new - energy_old
+        #### performance: let energy() calculate G_av only? Nope, G is only saving
+        # to an array and is helpful for understanding the algorithm.
+
+        if ΔE <= 0 # man könnte conditional auch umdrehen: if (ΔE <= 0 AND probability(ΔE, T) < rand())
+                                                                 # P = P_old
+            push!(en, energy_new)
+        elseif probability(ΔE, T) > rand() # rand() gives random number element of [0,1]
+            push!(en, energy_new)
+        else
+            P = P_old
+            push!(en, energy_old)
+        end
+
+    end
+    P, en
+end
+################################################################################
+################################################################################
+################################################################################
 
 ### several functions for SA
 function probability(ΔE::AbstractFloat, T::AbstractFloat) # probability function depends on ΔE and on temperature function
