@@ -280,10 +280,10 @@ function plot_histogram_random_vs_minimized_G_av(filename,random,minimized,nbins
 
     groupedbar(weights, yerr = errors, group = sx,
             xlabel = xlabelstr,
-            xguidefontsize = 10, yguidefontsize = 10, legendfontsize = 8, titlefontsize = 10,
+            xguidefontsize = 12, yguidefontsize = 15, legendfontsize = 12, titlefontsize = 20,
             ylabel = ylabelstr,
             label = labelstr,
-            title = "Normalized histogram of flow distribution",
+            title = titlestr,
             bar_width = 0.67,
             lw = 0.0, markerstrokewidth = 0.7, markerstrokecolor = :black,
             c = [:deepskyblue :orange], #https://juliagraphics.github.io/Colors.jl/stable/namedcolors/

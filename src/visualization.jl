@@ -90,6 +90,7 @@ end
 function set_gencon_colors(g,P)
     # loop over all edges
     edgefillc = RGB[]
+    B = Array(incidence_matrix(g, oriented=true))
     for i in 1:ne(g)
         if P[findfirst(isodd, B[:, i])] == P[findlast(isodd, B[:, i])]
             push!(edgefillc, colorant"grey85")
@@ -101,7 +102,7 @@ function set_gencon_colors(g,P)
     edgefillc
 end
 
-function flows_colormap(g, P)
+function flows_colormap(g, P, title, label_string)
     F = flow(g, P)
     F_abs = abs.(F)
     locs_x, locs_y = set_vertex_locs(P)
@@ -115,14 +116,23 @@ function flows_colormap(g, P)
     fig = Figure() # creats Figure Object
 
     # determines position in figure
-    ax1 = Axis(fig[1, 1], title ="Network", xgridvisible=false, ygridvisible=false)
+    ax1 = Axis(fig[1, 1], title = title, titlesize=35, xticksvisible=false, yticksvisible=false, xticklabelsvisible=false,
+        yticklabelsvisible=false, xgridvisible=false, ygridvisible=false)
+    hidespines!(ax1)
 
-    graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15, node_color=vertex_colors, edge_color=edgecolors)
+    # graphplot!(ax1, g, layout=lay, node_size=40.0, node_color=vertex_colors, elabels=string.(F), elabels_textsize=24) # exemplary 4 by 4 grids
+    # graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15, node_color=vertex_colors, edge_color=edgecolors)
+    graphplot!(ax1, g, layout=lay, edge_width=F_abs*20,node_size=30, node_color=vertex_colors, edge_color=edgecolors)
 
-    cbar = Colorbar(fig[1, 2], limits=(0,1), colormap = cgrad(:blues, 100),
-    flipaxis = false, vertical = true,
-    label = "flow units")
-    cbar.ticks = 0:0.1:1
+    # cbar = Colorbar(fig[1, 2], limits=(0,1), colormap = cgrad(:blues, 100),
+    # flipaxis = false, vertical = true,
+    # label = "flow units")
+    # cbar.ticks = 0:0.1:1
+
+    label = fig[1, 1, TopLeft()] = Label(fig, label_string, textsize = 30,
+    halign = :right)
+
+    label.padding = (-10, -50, 0, 0)
 
     fig
 end
@@ -139,17 +149,15 @@ function compare_flows_colormap(g, P1, P2)
 
     # set edge colors
     edgecolors1 = set_edge_colors(F1_abs)
-    edgecolors2 = set_edge_colors(F1_abs)
+    edgecolors2 = set_edge_colors(F2_abs)
     # set vertex colors
     vertex_colors1 = set_vertex_colors(P1)
     vertex_colors2 = set_vertex_colors(P2)
 
-
     fig = Figure() # creats Figure Object
-
     # determines position in figure
-    ax1 = Axis(fig[1, 1], title ="Network 1", xgridvisible=false, ygridvisible=false)
-    ax2 = Axis(fig[1, 2], title ="Network 2", xgridvisible=false, ygridvisible=false)
+    ax1 = Axis(fig[1, 1], title ="Random Network", xgridvisible=false, ygridvisible=false)
+    ax2 = Axis(fig[1, 2], title ="Optimized Network", xgridvisible=false, ygridvisible=false)
 
     # for manually adjusting postion and size of the suplots
     # see https://makie.juliaplots.org/stable/documentation/layoutables/
@@ -160,12 +168,12 @@ function compare_flows_colormap(g, P1, P2)
     # graphplot!(ax1, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors1, edge_color=edgecolors1, elabels=string.(F1), elabels_textsize=12, nlabels=string.(P1), nlabels_textsize=12)
     # graphplot!(ax2, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors2, edge_color=edgecolors2, elabels=string.(F2), elabels_textsize=12, nlabels=string.(P2), nlabels_textsize=12)
     graphplot!(ax1, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors1, edge_color=edgecolors1)
-    graphplot!(ax2, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors2, edge_color=edgecolors2)
+    graphplot!(ax2, g, layout=lay, edge_width=F2_abs*10,node_size=15.0, node_color=vertex_colors2, edge_color=edgecolors2)
 
     # cbar = Colorbar(fig[2, 1:2], limits=(minimum(F),maximum(F)), colormap = cgrad(:blues, Int(ceil(maximum(F)*100))),
     cbar = Colorbar(fig[2, 1:2], limits=(0,1), colormap = cgrad(:blues, 100),
     flipaxis = false, vertical = false,
-    label = "flow units")
+    label = "Flow Units")
     cbar.width = Relative(2/3)
     cbar.ticks = 0:0.1:1
 

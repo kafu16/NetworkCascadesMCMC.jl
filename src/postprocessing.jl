@@ -19,7 +19,7 @@ end
 """ Merging multiple runs. Function that takes .jld-file as input containing the
     value of the energy for each iteration step of simulated annealing and executes
     multiple postprocessing functions. The resulting postprocessing data is saved
-    as another .jl-file.
+    as another .jld-file.
 """
 function postprocess_sim_anneal_merge(directory, Data_loaded, filepath_out, T)
     energy_init = Data_loaded["energy_init"]; energy_final = Data_loaded["energy_final"]
@@ -473,13 +473,17 @@ function execute_postprocessing(directory, T)
     Data_post = JLD.load(postprocess_data)
     filename = "params_postprocess.txt"
     write_out_params(Data_post, filename)
+    # write out T 
+    open(filename, "a") do io
+        write(io, "T: "); write(io, string(T)); write(io, "\n")
+    end
     write_out_postprocess(Data_post, filename)
     df = df_postprocessing(Data_post)
     CSV.write(string(directory,"/data_postprocess.csv"), df)
 end
 
 ################################################################################
-######################### DEPRECATED FUNCTIONS##################################
+######################### DEPRECATED FUNCTIONS #################################
 ################################################################################
 
 # # measure  number of edges gen-gen, con-con, gen-con 04.05.2020

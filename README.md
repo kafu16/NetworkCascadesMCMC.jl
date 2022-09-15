@@ -40,7 +40,7 @@ using CSV
 using LightGraphs
 
 # initialization of parameters
-N_side = 8
+N_side = 8 (N_side has to be larger than 2)
 C = 1.
 steps_per_temp = 1 # number of steps before lowering temperature
 k_max = 10
