@@ -82,6 +82,11 @@ function energy_gencon(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFl
     G, convert(Float64,nr_gen_con(g_init, P)[3]) # this way two values in a tuple are returned by a function
 end
 
+function energy_loc_1step(g_init::AbstractGraph, P::Array{Float64,1}, C::AbstractFloat)
+    -loc_1step(g_init, P, C)[1], -loc_1step(g_init, P, C)[2]
+end
+
+
 ################################################################################
 ########################## Monte Carlo step functions ##########################
 ################################################################################
