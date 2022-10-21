@@ -14,6 +14,11 @@ Implemented grid topologies:
 Implemented flow pattern
  - Randomly chosen equal number of in- an outflows that are either +1 or -1.
 
+Implemented energy functions:
+ - energy_G: largest connected component
+ - energy_gencon: Number of edges between generators and consumers
+ - energy_loc_1step: Nonlocality of edge failures
+
 NetworkCascadesMCMC.jl comprises further non-documented postprocessing and graph visualization features.
 
 ## Installation
@@ -27,9 +32,9 @@ At first, the parameters are initialized. Then, in the directory where the scrip
  - postprocess_data.jld: all the postprocessing data.
  - params_postprocess.txt: mean values of postprocessing data
  - data_postprocess.csv: overview of selected postprocessing data
- - decreasing_Gav_av.pdf: plot of avearage of G_av of all runs
- - decreasing_G_av_sample.pdf: G_av of one single run
- - flows_rand_min_Gav.pdf: histogram comparing flows of initial grids and sampled grids.
+ - decreasing_Gav_av.pdf: plot of avearage of G_av of all runs (not up to date)
+ - decreasing_G_av_sample.pdf: G_av of one single run (not up to date)
+ - flows_rand_min_Gav.pdf: histogram comparing flows of initial grids and sampled grids (not up to date).
 
 ```julia
 using NetworkCascadesMCMC
@@ -37,27 +42,31 @@ using NetworkCascadesMCMC
 using Dates
 using JLD
 using CSV
-using LightGraphs
+using Graphs
 
+################################################################################
+############################### simulation #####################################
+################################################################################
 # initialization of parameters
-N_side = 8 (N_side has to be larger than 2)
+energy_func = energy_G # specifying energy function
+N_side = 8 # 8 (N_side has to be larger than 2)
 C = 1.
 steps_per_temp = 1 # number of steps before lowering temperature
 k_max = 10
-annealing_schedule = temp_ex3_a
-annealing_schedule_name = "2_0.99^k"  # for storing annealing schedule in .jld
-N_runs = 4
+annealing_schedule = temp_ex3_b
+annealing_schedule_name = "2_0.99^k+0.25"  # for storing annealing schedule in .jld
+N_runs = 2
 T = 0.95
 Run_Nr = 1
 
-rng_seed = 321
-rpg_seed = 123
-n = 64
-n0 = 32
-p = 0.999
-q = 0.44
-r = 0.3
-s = 0.28
+# # only needed for synthetic network (SyntheticNetworks.jl)
+# rpg_seed = 123
+# n = 64
+# n0 = 32
+# p = 0.999
+# q = 0.44
+# r = 0.3
+# s = 0.28
 
 # creating data folder
 repo_directory = pwd()
@@ -73,29 +82,75 @@ g = gen_square_grid(N_side)
 # alternative grid topologies:
 # g = gen_periodic_square_grid(N_side)
 # g = gen_rand_grid(rpg_seed, n, n0, p, q, r, s)
+savegraph("graph.lgz", g)
 
 # flow patterns
 P_inits = gen_multiple_stable_configs(g, C, N_runs)
 
 # core simulation
-simulation_data = string(directory,"/simulation_data.jld")
-multiple_sim_anneal(simulation_data, g, P_inits, C, annealing_schedule, annealing_schedule_name, steps_per_temp, k_max, N_runs)
+multiple_sim_anneal(directory, g, P_inits, C, annealing_schedule, energy_func, annealing_schedule_name, steps_per_temp, k_max, N_runs)
+cd(repo_directory)
 
-# postprocessing
-postprocess_data = string(directory,"/postprocess_data.jld")
+################################################################################
+# Postprocessing (calculation of mean and standard error) and merging of runs ##
+################################################################################
+
+# execute above code at least twice to get two folders and adapt the following paths
+directories = ["/media/vollmich/Arbeit/HU_Berlin/19 19 SS/BA/BA_PIK/Github_Repos/Private_MA/data/20221021_141447.917_N_runs2_k_max10_ann_sched2_0.99^k+0.25",
+    "/media/vollmich/Arbeit/HU_Berlin/19 19 SS/BA/BA_PIK/Github_Repos/Private_MA/data/20221021_141509.05_N_runs2_k_max10_ann_sched2_0.99^k+0.25"]
+
+# read out parameters from first directory
+params = JLD.load(string(directories[1],"/mean_sim_data.jld"))
+k_max = params["k_max"]
+steps_per_temp = params["steps_per_temp"]
+C = params["C"]
+annealing_schedule_name = params["annealing_schedule"]
+N_vertices = params["N_vertices"]
+g = loadgraph(string(directories[1],"/graph.lgz"))
+
+# calculate mean of all simulations
+mean_energies_k, number_of_all_runs = energy_mean_multiple_simulations(directories, k_max)
+
+# creating data folder
+repo_directory = pwd()
+datetime = Dates.format(t, "yyyymmdd_HHMMSS.s") # https://riptutorial.com/julia-lang/example/20476/current-time
+folder = string("data/","merged_",datetime,"_N_runs",string(number_of_all_runs),"_k_max",string(k_max),"_ann_sched",string(annealing_schedule_name))
+directory = string(repo_directory,"/data/","merged_",datetime,"_N_runs",string(number_of_all_runs),"_k_max",string(k_max),"_ann_sched",string(annealing_schedule_name))
+mkpath(folder)
+cd(directory)
+
+# merge simulations and calculate standard error
+standard_error_and_merge_multiple_simulations(directory, directories, repo_directory, number_of_all_runs, g, k_max, mean_energies_k, N_vertices, annealing_schedule_name, steps_per_temp, C)
+cd(repo_directory)
+
+################################################################################
+############################# Postprocessing ###################################
+################################################################################
+
+# execute postprocessing of merged simulation
+T = 0.95
+execute_postprocessing(directory, T)
+cd(repo_directory)
+
+################################################################################
+################################## Plotting ####################################
+################################################################################
+mean_stderror_data = string(directory,"/mean_stderror_data.jld")
+plot_mean_stderror_data = JLD.load(mean_stderror_data)
+μ = plot_mean_stderror_data["energy_mean"]
+stderror = plot_mean_stderror_data["energy_standard_error"]
+cd(directory)
+plot_Gav_av_merge(μ, stderror)
+
+dir = directories[1]
+simulation_data = string(dir,"/simulation_data.jld")
 Data_sim = JLD.load(simulation_data)
-postprocess_sim_anneal(Data_sim, postprocess_data, T)
-Data_post = JLD.load(postprocess_data)
-filename = "params_postprocess.txt"
-write_out_params(Data_post, filename)
-write_out_postprocess(Data_post, filename)
-df = df_postprocessing(Data_post)
-CSV.write(string(directory,"/data_postprocess.csv"), df)
-
-# plotting
-plot_Gav_av(Data_sim)
-plot_histogram_all_runs(Data_post)
 Run_Nr = 1; plot_Gav_single_run(Data_sim, Run_Nr)
 
+postprocess_data = string(directory,"/postprocess_data.jld")
+Data_post = JLD.load(postprocess_data)
+plot_histogram_all_runs(Data_post)
 cd(repo_directory)
+################################################################################
+
 ```
