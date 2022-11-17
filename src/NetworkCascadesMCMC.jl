@@ -18,7 +18,7 @@ export sim_anneal, multiple_sim_anneal, parallel_multiple_sim_anneal, parallel_m
 export flow, linefailure!, cascade!
 
 # energy functions
-export energy_G, energy_gencon, energy_loc_1step, loc_1step, loc_1step_0
+export energy_G, energy_gencon, energy_loc_1step, energy_loc_1step_0, loc_1step, loc_1step_0
 
 # postprocessing
 export postprocess_sim_anneal_merge
