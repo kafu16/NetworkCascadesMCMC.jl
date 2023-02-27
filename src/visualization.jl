@@ -120,7 +120,7 @@ function flows_colormap(g, P, title, label_string)
         yticklabelsvisible=false, xgridvisible=false, ygridvisible=false)
     hidespines!(ax1)
 
-    # graphplot!(ax1, g, layout=lay, node_size=40.0, node_color=vertex_colors, elabels=string.(F), elabels_textsize=24) # exemplary 4 by 4 grids
+    # graphplot!(ax1, g, layout=lay, node_size=40.0, node_color=vertex_colors, elabels=string.(F), elabels_fontsize=24) # exemplary 4 by 4 grids
     # graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15, node_color=vertex_colors, edge_color=edgecolors)
     graphplot!(ax1, g, layout=lay, edge_width=F_abs*20,node_size=30, node_color=vertex_colors, edge_color=edgecolors)
 
@@ -129,7 +129,7 @@ function flows_colormap(g, P, title, label_string)
     # label = "flow units")
     # cbar.ticks = 0:0.1:1
 
-    label = fig[1, 1, TopLeft()] = Label(fig, label_string, textsize = 30,
+    label = fig[1, 1, TopLeft()] = Label(fig, label_string, fontsize = 30,
     halign = :right)
 
     label.padding = (-10, -50, 0, 0)
@@ -165,8 +165,8 @@ function compare_flows_colormap(g, P1, P2)
     # ax2 = Axis(fig, bbox = BBox(425, 750, 150, 475), title = "Network 2")
 
     # # adding edge and vertex labels
-    # graphplot!(ax1, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors1, edge_color=edgecolors1, elabels=string.(F1), elabels_textsize=12, nlabels=string.(P1), nlabels_textsize=12)
-    # graphplot!(ax2, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors2, edge_color=edgecolors2, elabels=string.(F2), elabels_textsize=12, nlabels=string.(P2), nlabels_textsize=12)
+    # graphplot!(ax1, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors1, edge_color=edgecolors1, elabels=string.(F1), elabels_fontsize=12, nlabels=string.(P1), nlabels_fontsize=12)
+    # graphplot!(ax2, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors2, edge_color=edgecolors2, elabels=string.(F2), elabels_fontsize=12, nlabels=string.(P2), nlabels_fontsize=12)
     graphplot!(ax1, g, layout=lay, edge_width=F1_abs*10,node_size=15.0, node_color=vertex_colors1, edge_color=edgecolors1)
     graphplot!(ax2, g, layout=lay, edge_width=F2_abs*10,node_size=15.0, node_color=vertex_colors2, edge_color=edgecolors2)
 
@@ -177,9 +177,9 @@ function compare_flows_colormap(g, P1, P2)
     cbar.width = Relative(2/3)
     cbar.ticks = 0:0.1:1
 
-    label_a = fig[1, 1, TopLeft()] = Label(fig, "A", textsize = 24,
+    label_a = fig[1, 1, TopLeft()] = Label(fig, "A", fontsize = 24,
     halign = :right)
-    label_b = fig[1, 2, TopLeft()] = Label(fig, "B", textsize = 24,
+    label_b = fig[1, 2, TopLeft()] = Label(fig, "B", fontsize = 24,
     halign = :right)
 
     label_a.padding = (0, 6, 16, 0)
@@ -205,7 +205,7 @@ function visualize_gencon(g, P)
     # determines position in figure
     ax1 = Axis(fig[1, 1], title ="Network", xgridvisible=false, ygridvisible=false)
 
-    # graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15.0, node_color=vertex_colors, edge_color=edgecolors, elabels=string.(F), elabels_textsize=12)
+    # graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15.0, node_color=vertex_colors, edge_color=edgecolors, elabels=string.(F), elabels_fontsize=12)
     graphplot!(ax1, g, layout=lay, edge_width=F_abs*10,node_size=15, node_color=vertex_colors, edge_color=edgecolors)
 
     fig
